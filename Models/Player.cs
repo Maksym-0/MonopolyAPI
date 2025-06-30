@@ -14,7 +14,7 @@
         public bool HisAction { get; set; }
         public bool CanMove { get; set; }
         public bool CanBuyCell { get; set; }
-        public bool CanUpdateCell { get; set; }
+        public bool CanLevelUpCell { get; set; }
         public Player(string gameId, string name)
         {
             Name = name;
@@ -29,14 +29,14 @@
             CantAction = 0;
             CanMove = false;
             CanBuyCell = false;
-            CanUpdateCell = false;
+            CanLevelUpCell = false;
         }
         public Player() { }
         public void StartAction()
         {
             HisAction = true;
             CanMove = true;
-            CanUpdateCell = true;
+            CanLevelUpCell = true;
         }
         public void StopAction()
         {
@@ -44,11 +44,11 @@
             NeedPay = false;
             CanMove = false;
             CanBuyCell = false;
-            CanUpdateCell = false;
+            CanLevelUpCell = false;
         }
         public bool CheckEndAction()
         {
-            if (CanMove == false && CanBuyCell == false && CanUpdateCell == false && NeedPay == false) return true;
+            if (CanMove == false && CanBuyCell == false && CanLevelUpCell == false && NeedPay == false) return true;
             else return false;
         }
         public bool Buy(int payment)
@@ -75,7 +75,7 @@
             if (Balance >= payment)
             {
                 Balance -= payment;
-                CanUpdateCell = false;
+                CanLevelUpCell = false;
                 return true;
             }
             else return false;

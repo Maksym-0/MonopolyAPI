@@ -3,6 +3,7 @@ using Monopoly;
 using Monopoly.Models;
 using Monopoly.Abstractions;
 using System.Xml.Linq;
+using System.Security.Principal;
 
 namespace Monopoly.Database
 {
@@ -12,12 +13,11 @@ namespace Monopoly.Database
         
         public async Task InsertAccountAsync(Account acc)
         {
-            var sql = $"INSERT INTO PUBLIC.\"{Constants.DBaccountName}\" (\"Name\", \"Password\")" +
-                "VALUES (@name, @password)";
+            var sql = $"INSERT INTO PUBLIC.\"{Constants.DBaccountName}\" (\"ID\", \"Name\", \"Password\")" +
+                "VALUES (@id, @name, @password)";
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
-            cmd.Parameters.AddWithValue("name", acc.Name);
-            cmd.Parameters.AddWithValue("password", acc.Password);
+            AddWithValue(cmd, acc);
 
             await _connection.OpenAsync();
             await cmd.ExecuteNonQueryAsync();
@@ -25,7 +25,7 @@ namespace Monopoly.Database
         }
         public async Task<List<Account>> ReadAccountListAsync()
         {
-            var sql = "SELECT \"Name\", \"Password\" " +
+            var sql = "SELECT \"ID\", \"Name\", \"Password\" " +
                 $"FROM public.\"{Constants.DBaccountName}\"";
 
             await _connection.OpenAsync();
@@ -33,13 +33,12 @@ namespace Monopoly.Database
 
             NpgsqlDataReader npgsqlData = await cmd.ExecuteReaderAsync();
 
-            Account account = new Account();
+            Account acc;
             List<Account> accounts = new List<Account>();
             while(await npgsqlData.ReadAsync())
             {
-                account.Name = npgsqlData.GetString(0);
-                account.Password = npgsqlData.GetString(1);
-                accounts.Add(account);
+                acc = ConstructAccount(npgsqlData);
+                accounts.Add(acc);
             }
 
             await _connection.CloseAsync();
@@ -47,7 +46,7 @@ namespace Monopoly.Database
         }
         public async Task<Account> ReadAccountAsync(string name)
         {
-            var sql = "SELECT \"Name\", \"Password\" " +
+            var sql = "SELECT \"ID\", \"Name\", \"Password\" " +
                 $"FROM public.\"{Constants.DBaccountName}\" " +
                 $"WHERE \"Name\" = @name";
 
@@ -58,22 +57,20 @@ namespace Monopoly.Database
             NpgsqlDataReader npgsqlData = await cmd.ExecuteReaderAsync();
             await npgsqlData.ReadAsync();
 
-            Account account = new Account();
-            account.Name = npgsqlData.GetString(0);
-            account.Password = npgsqlData.GetString(1);
+            Account account = ConstructAccount(npgsqlData);
 
             await _connection.CloseAsync();
             return account;
         }
         public async Task UpdateAccountAsync(Account acc)
         {
-            var sql = "SET \"Name\" = @Name, \"Password\" = @Password " +
-                $"FROM public.\"{Constants.DBaccountName}\"";
+            var sql = $"UPDATE PUBLIC.\"{Constants.DBaccountName}\" " +
+                "SET \"Name\" = @Name, \"Password\" = @Password " +
+                "WHERE \"ID\" = @id";
 
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
-            cmd.Parameters.AddWithValue("Name", acc.Name);
-            cmd.Parameters.AddWithValue("Password", acc.Password);
+            AddWithValue(cmd, acc);
 
             await _connection.OpenAsync();
             await cmd.ExecuteNonQueryAsync();
@@ -82,16 +79,32 @@ namespace Monopoly.Database
         public async Task DeleteAccountAsync(Account acc)
         {
             var sql = $"DELETE FROM public.\"{Constants.DBaccountName}\" " +
-                "WHERE \"Name\" = @name AND \"Password\" = @password";
+                "WHERE \"ID\" = @id";
 
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
-            cmd.Parameters.AddWithValue("name", acc.Name);
-            cmd.Parameters.AddWithValue("password", acc.Password);
+            cmd.Parameters.AddWithValue("id", acc.ID);
 
             await _connection.OpenAsync();
             await cmd.ExecuteNonQueryAsync();
             await _connection.CloseAsync();
+        }
+
+        private Account ConstructAccount(NpgsqlDataReader npgsqlData)
+        {
+            Account acc = new Account()
+            {
+                ID = npgsqlData.GetString(0),
+                Name = npgsqlData.GetString(1),
+                Password = npgsqlData.GetString(2)
+            };
+            return acc;
+        }
+        private void AddWithValue(NpgsqlCommand cmd, Account acc)
+        {
+            cmd.Parameters.AddWithValue("id", acc.ID);
+            cmd.Parameters.AddWithValue("name", acc.Name);
+            cmd.Parameters.AddWithValue("password", acc.Password);
         }
     }
 }
