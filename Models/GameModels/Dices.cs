@@ -1,4 +1,4 @@
-﻿namespace Monopoly.Models
+﻿namespace Monopoly.Models.GameModels
 {
     public class Dice
     {

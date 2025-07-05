@@ -1,30 +1,33 @@
 ﻿using Monopoly.Database;
 
-namespace Monopoly.Models
+namespace Monopoly.Models.GameModels
 {
     public class Cell
     {
         public string GameId { get; set; }
+        public bool Unique { get; set; }
         public string Name { get; set; }
         public int Number { get; set; }
         public int? Price { get; set; }
         public int? Rent { get; set; }
-        public string? OwnerName { get; set; }
+        public string? Owner { get; set; }
         public int Level { get; set; }
         public Cell(string gameId, string name, int number)
         {
+            Unique = true;
             GameId = gameId;
             Name = name;
             Number = number;
         }
         public Cell(string gameId, string name, int number, int price, int rent)
         {
+            Unique = false;
             GameId = gameId;
             Name = name;
             Number = number;
             Price = price;
             Rent = rent;
-            OwnerName = null;
+            Owner = null;
             Level = 0;
         }
         public Cell() { }
@@ -73,7 +76,7 @@ namespace Monopoly.Models
             }
             for (int i = 0; i < monopolyCells.Count; i++)
             {
-                if (monopolyCells[i].OwnerName != OwnerName)
+                if (monopolyCells[i].Owner != Owner)
                     return false;
             }
             return true;

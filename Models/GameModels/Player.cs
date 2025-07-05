@@ -1,7 +1,10 @@
-﻿namespace Monopoly.Models
+﻿using Monopoly.Models.RoomModels;
+
+namespace Monopoly.Models.GameModels
 {
     public class Player
     {
+        public string Id { get; set; }
         public string Name { get; set; }
         public string GameId { get; set; }
         public int Balance { get; set; }
@@ -15,8 +18,26 @@
         public bool CanMove { get; set; }
         public bool CanBuyCell { get; set; }
         public bool CanLevelUpCell { get; set; }
-        public Player(string gameId, string name)
+        public Player(PlayerInRoom basicPlayer)
         {
+            Id = basicPlayer.Id;
+            Name = basicPlayer.Name;
+            GameId = basicPlayer.RoomId;
+            Balance = 3000;
+            Location = 0;
+            ReverseMove = 0;
+            IsPrisoner = false;
+            NeedPay = false;
+            InGame = true;
+            HisAction = false;
+            CantAction = 0;
+            CanMove = false;
+            CanBuyCell = false;
+            CanLevelUpCell = false;
+        }
+        public Player(string gameId, string playerId, string name)
+        {
+            Id = playerId;
             Name = name;
             GameId = gameId;
             Balance = 3000;
@@ -51,11 +72,11 @@
             if (CanMove == false && CanBuyCell == false && CanLevelUpCell == false && NeedPay == false) return true;
             else return false;
         }
-        public bool Buy(int payment)
+        public bool DeductMoney(int amount)
         {
-            if (Balance >= payment)
+            if (Balance >= amount)
             {
-                Balance -= payment;
+                Balance -= amount;
                 return true;
             }
             else return false;

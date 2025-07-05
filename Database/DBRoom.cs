@@ -1,19 +1,16 @@
 ﻿using Npgsql;
-using Monopoly;
-using Monopoly.Models;
-using NpgsqlTypes;
-using System.Xml.Linq;
-using Monopoly.Abstractions;
+using Monopoly.Interfaces.IDatabases;
+using Monopoly.Models.RoomModels;
 
 namespace Monopoly.Database
 {
     public class DBRoom : IRoomRepository
     {
-        NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
+        private readonly NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
         public async Task InsertRoomAsync(Room room)
         {
-            var sql = $"INSERT INTO PUBLIC.\"{Constants.DBroomName}\" (\"RoomId\", \"MaxNumberOfPlayers\", \"NumberOfPlayers\", \"PlayerNames\", \"Password\", \"InGame\")" +
-                "VALUES (@RoomId, @MaxNumberOfPlayers, @NumberOfPlayers, @PlayerNames, @Password, @InGame)";
+            var sql = $"INSERT INTO PUBLIC.\"{Constants.DBroomName}\" (\"RoomId\", \"MaxNumberOfPlayers\", \"CountOfPlayers\", \"Password\", \"InGame\")" +
+                "VALUES (@roomId, @maxNumberOfPlayers, @countOfPlayers, @password, @inGame)";
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             AddWithValue(cmd, room);
@@ -24,7 +21,7 @@ namespace Monopoly.Database
         }
         public async Task<List<Room>> ReadRoomListAsync()
         {
-            var sql = $"SELECT \"RoomId\", \"MaxNumberOfPlayers\", \"NumberOfPlayers\", \"PlayerNames\", \"Password\", \"InGame\" " +
+            var sql = $"SELECT \"RoomId\", \"MaxNumberOfPlayers\", \"CountOfPlayers\", \"Password\", \"InGame\" " +
                 $"FROM public.\"{Constants.DBroomName}\"";
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
@@ -42,17 +39,21 @@ namespace Monopoly.Database
         }
         public async Task<Room> ReadRoomAsync(string roomId)
         {
-            var sql = $"SELECT \"RoomId\", \"MaxNumberOfPlayers\", \"NumberOfPlayers\", \"PlayerNames\", \"Password\", \"InGame\" " +
+            var sql = $"SELECT \"RoomId\", \"MaxNumberOfPlayers\", \"CountOfPlayers\", \"Password\", \"InGame\" " +
                 $"FROM public.\"{Constants.DBroomName}\" " +
-                $"WHERE \"RoomId\" = @RoomId";
+                $"WHERE \"RoomId\" = @roomId";
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
-            cmd.Parameters.AddWithValue("RoomId", roomId);
+            cmd.Parameters.AddWithValue("roomId", roomId);
             
             await _connection.OpenAsync();
             NpgsqlDataReader npgsqlData = await cmd.ExecuteReaderAsync();
             
-            await npgsqlData.ReadAsync();
+            if (!await npgsqlData.ReadAsync())
+            {
+                await _connection.CloseAsync();
+                throw new Exception("Кімнату не знайдено");
+            }
             Room room = ConstructRoom(npgsqlData);
             await _connection.CloseAsync();
             
@@ -61,8 +62,8 @@ namespace Monopoly.Database
         public async Task UpdateRoomAsync(Room room)
         {
             var sql = $"UPDATE public.\"{Constants.DBroomName}\" " +
-                "SET \"PlayerNames\" = @PlayerNames, \"NumberOfPlayers\" = @NumberOfPlayers, \"MaxNumberOfPlayers\" = @MaxNumberOfPlayers, \"InGame\" = @InGame, \"Password\" = @Password " +
-                $"WHERE \"RoomId\" = @RoomId AND (\"Password\" = @Password OR (@Password IS NULL AND \"Password\" IS NULL))";
+                "SET \"CountOfPlayers\" = @countOfPlayers, \"MaxNumberOfPlayers\" = @maxNumberOfPlayers, \"InGame\" = @inGame, \"Password\" = @password " +
+                $"WHERE \"RoomId\" = @roomId";
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             AddWithValue(cmd, room);
@@ -74,30 +75,44 @@ namespace Monopoly.Database
         public async Task DeleteRoomAsync(string roomId)
         {
             var sql = $"DELETE FROM public.\"{Constants.DBroomName}\" " +
-                "WHERE \"RoomId\" = @RoomId";
+                "WHERE \"RoomId\" = @roomId";
 
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
-            cmd.Parameters.AddWithValue("RoomId", roomId);
+            cmd.Parameters.AddWithValue("roomId", roomId);
 
             await _connection.OpenAsync();
             await cmd.ExecuteNonQueryAsync();
             await _connection.CloseAsync();
         }
 
+        public async Task<bool> SearchRoomWithIdAsync(string roomId)
+        {
+            var sql = $"SELECT * FROM public.\"{Constants.DBroomName}\" where \"RoomId\" = @roomId";
+
+            using NpgsqlCommand cmd = new(sql, _connection);
+            cmd.Parameters.AddWithValue("roomId", roomId);
+
+            await _connection.OpenAsync();
+            using NpgsqlDataReader sqlData = await cmd.ExecuteReaderAsync();
+            bool data = await sqlData.ReadAsync();
+            await _connection.CloseAsync();
+
+            return data;
+        }
+
         private Room ConstructRoom(NpgsqlDataReader npgsqlData)
         {
             Room room;
-            if (npgsqlData.IsDBNull(4))
+            if (npgsqlData.IsDBNull(3))
             {
                 room = new Room
                 {
                     RoomId = npgsqlData.GetString(0),
                     MaxNumberOfPlayers = npgsqlData.GetInt32(1),
-                    NumberOfPlayers = npgsqlData.GetInt32(2),
-                    PlayerNames = new List<string>(npgsqlData.GetFieldValue<string[]>(3)),
+                    CountOfPlayers = npgsqlData.GetInt32(2),
                     Password = null,
-                    InGame = npgsqlData.GetBoolean(5)
+                    InGame = npgsqlData.GetBoolean(4)
                 };
             }
             else
@@ -106,33 +121,23 @@ namespace Monopoly.Database
                 {
                     RoomId = npgsqlData.GetString(0),
                     MaxNumberOfPlayers = npgsqlData.GetInt32(1),
-                    NumberOfPlayers = npgsqlData.GetInt32(2),
-                    PlayerNames = new List<string>(npgsqlData.GetFieldValue<string[]>(3)),
-                    Password = npgsqlData.GetString(4),
-                    InGame = npgsqlData.GetBoolean(5)
+                    CountOfPlayers = npgsqlData.GetInt32(2),
+                    Password = npgsqlData.GetString(3),
+                    InGame = npgsqlData.GetBoolean(4)
                 };
             }
             return room;
         }
         private void AddWithValue(NpgsqlCommand cmd, Room room)
         {
-            cmd.Parameters.AddWithValue("RoomId", room.RoomId);
+            cmd.Parameters.AddWithValue("roomId", room.RoomId);
             if (room.Password == null)
-                cmd.Parameters.AddWithValue("Password", DBNull.Value);
+                cmd.Parameters.AddWithValue("password", DBNull.Value);
             else
-                cmd.Parameters.AddWithValue("Password", room.Password);
-            if (room.PlayerNames == null)
-            {
-                cmd.Parameters.AddWithValue("PlayerNames", DBNull.Value);
-                cmd.Parameters.AddWithValue("NumberOfPlayers", 0);
-            }
-            else
-            { 
-                cmd.Parameters.AddWithValue("PlayerNames", room.PlayerNames.ToArray());
-                cmd.Parameters.AddWithValue("NumberOfPlayers", room.PlayerNames.Count);
-            }
-            cmd.Parameters.AddWithValue("MaxNumberOfPlayers", room.MaxNumberOfPlayers);
-            cmd.Parameters.AddWithValue("InGame", room.InGame);
+                cmd.Parameters.AddWithValue("password", room.Password);
+            cmd.Parameters.AddWithValue("countOfPlayers", room.CountOfPlayers);
+            cmd.Parameters.AddWithValue("maxNumberOfPlayers", room.MaxNumberOfPlayers);
+            cmd.Parameters.AddWithValue("inGame", room.InGame);
         }
     }
 }

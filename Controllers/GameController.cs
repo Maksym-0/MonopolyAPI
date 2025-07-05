@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Monopoly.Database;
-using Monopoly.Models;
-using Monopoly.Service;
+using Monopoly.Interfaces.IServices;
+using Monopoly.Models.ApiResponse;
+using Monopoly.Models.APIResponse;
+using System.Security.Claims;
 
 namespace Monopoly.Controllers
 {
@@ -11,92 +12,175 @@ namespace Monopoly.Controllers
     [Authorize]
     public class GameController : ControllerBase
     {
-        private readonly ILogger<GameController> logger;
-        private GameService gameService = new GameService();
-        public GameController(ILogger<GameController> logger)
+        private readonly IGameService _gameService;
+
+        public GameController(IGameService gameService)
         {
-            this.logger = logger;
+            _gameService = gameService;
         }
+
         [HttpGet]
         public async Task<IActionResult> GameStatus(string gameId)
         {
-            GameStatus game = await gameService.StatusOfGameAsync(gameId);
-            return Ok(game);
+            try
+            {
+                GameStatus game = await _gameService.StatusOfGameAsync(gameId);
+                ApiResponse<GameStatus> response = new ApiResponse<GameStatus>()
+                {
+                    Success = true,
+                    Message = "Отримано поточний стан гри",
+                    Data = game
+                };
+                return Ok(response);
+            }
+            catch(Exception ex)
+            {
+                return CatchBadRequest(ex);
+            }
         }
         [HttpPut("move")]
         public async Task<IActionResult> Move(string gameId)
         {
-            string? check = await gameService.ValidateMoveAsync(gameId, User.Identity.Name);
-            if (check != null)
-                return BadRequest(check);
-
-            string moveResult = await gameService.MoveAsync(gameId, User.Identity.Name);
-            return Ok(moveResult);
+            try
+            {
+                string moveResult = await _gameService.MoveAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value);
+                ApiResponse<string> response = new ApiResponse<string>()
+                {
+                    Success = true,
+                    Message = "Бросок кубиків та відповідний рух завершено",
+                    Data = moveResult
+                };
+                return Ok(response);
+            }
+            catch(Exception ex)
+            {
+                return CatchBadRequest(ex);
+            }
         }
         [HttpPut("pay")]
         public async Task<IActionResult> Pay(string gameId)
         {
-            string? check = await gameService.ValidatePayAsync(gameId, User.Identity.Name);
-            if (check != null)
-                return BadRequest(check);
-
-            string? payment = await gameService.TryPayAsync(gameId, User.Identity.Name);
-            if (payment != null)
-                return Ok(payment);
-            return BadRequest("Недостатньо коштів для сплати рахунків");
+            try
+            {
+                bool payResult = await _gameService.TryPayAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value);
+                ApiResponse<bool> response = new ApiResponse<bool>()
+                {
+                    Success = true,
+                    Message = "Сплату рахунків завершено",
+                    Data = payResult
+                };
+                return Ok(response); 
+            }
+            catch (Exception ex)
+            {
+                return CatchBadRequest(ex);
+            }
         }
         [HttpPut("cells/buy")]
         public async Task<IActionResult> BuyCell(string gameId)
         {
-            string? check = await gameService.ValidateBuyAsync(gameId, User.Identity.Name);
-            if (check != null)
-                return BadRequest(check);
-
-            string? buyResult = await gameService.TryBuyAsync(gameId, User.Identity.Name);
-            if (buyResult != null)
-                return Ok(buyResult);
-            return BadRequest();
+            try
+            {
+                bool buyResult = await _gameService.TryBuyAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value);
+                ApiResponse<bool> response = new ApiResponse<bool>()
+                {
+                    Success = true,
+                    Message = "Придбання клітини завершено",
+                    Data = buyResult
+                };
+                return Ok(response);
+            }
+            catch(Exception ex)
+            {
+                return CatchBadRequest(ex);
+            }
         }
         [HttpPut("cells/{cellNumber}/levelup")]
         public async Task<IActionResult> LevelUpCell(string gameId, int cellNumber)
         {
-            string? check = await gameService.ValidateLevelUpAsync(gameId, User.Identity.Name, cellNumber);
-            if (check != null)
-                return BadRequest(check);
-            else
-                return Ok(await gameService.LevelUpAsync(gameId, User.Identity.Name, cellNumber));
+            try
+            {
+                await _gameService.LevelUpAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value, cellNumber);
+                ApiResponse<string> response = new ApiResponse<string>()
+                {
+                    Success = true,
+                    Message = "Збільшення рівня клітини завершено",
+                    Data = null
+                };
+                return Ok(response);
+            }
+            catch(Exception ex)
+            {
+                return CatchBadRequest(ex);
+            }
         }
         [HttpPut("cells/{cellNumber}/leveldown")]
         public async Task<IActionResult> LevelDownCell(string gameId, int cellNumber)
         {
-            DBCells dbCells = new DBCells();
-            DBPlayerStatus dbPlayer = new DBPlayerStatus();
-
-            Player player = await dbPlayer.ReadPlayerAsync(gameId, User.Identity.Name);
-            Cell cell = await dbCells.ReadCellAsync(gameId, cellNumber);
-
-            string? check = await gameService.ValidateLevelDownAsync(gameId, User.Identity.Name, cellNumber);
-            if (check != null)
-                return BadRequest(check);
-            else
-                return Ok(await gameService.LevelDownAsync(gameId, User.Identity.Name, cellNumber));
+            try
+            {
+                await _gameService.LevelDownAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value, cellNumber);
+                ApiResponse<string> response = new ApiResponse<string>()
+                {
+                    Success = true,
+                    Message = "Зменшення рівня клітини завершено",
+                    Data = null
+                };
+                return Ok(response);
+            }
+            catch(Exception ex)
+            {
+                return CatchBadRequest(ex);
+            }
         }
         [HttpPut("endaction")]
         public async Task<IActionResult> EndAction(string gameId)
         {
-            string? check = await gameService.ValidateEndActionAsync(gameId, User.Identity.Name);
-            if (check != null)
-                return BadRequest(check);
-            return Ok(await gameService.EndActionAsync(gameId, User.Identity.Name));
+            try
+            {
+                string status = await _gameService.EndActionAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value);
+                ApiResponse<string> response = new ApiResponse<string>()
+                {
+                    Success = true,
+                    Message = "Дію завершено",
+                    Data = status
+                };
+                return Ok(response); 
+            }
+            catch(Exception ex)
+            {
+                return CatchBadRequest(ex);
+            }
         }
         [HttpPut("leave")]
         public async Task<IActionResult> LeaveGame(string gameId)
         {
-            string? check = await gameService.ValidateLeaveAsync(gameId, User.Identity.Name);
-            if (check != null)
-                return BadRequest(check);
+            try
+            {
+                string status = await _gameService.LeaveGameAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value);
+                ApiResponse<string> response = new ApiResponse<string>()
+                {
+                    Success = true,
+                    Message = "Гру покинуто",
+                    Data = status
+                };
+                return Ok(response);
+            }
+            catch(Exception ex)
+            {
+                return CatchBadRequest(ex);
+            }
+        }
 
-            return Ok(await gameService.LeaveGameAsync(gameId, User.Identity.Name));
+        private IActionResult CatchBadRequest(Exception ex)
+        {
+            ApiResponse<List<RoomResponse>> response = new ApiResponse<List<RoomResponse>>()
+            {
+                Success = false,
+                Message = ex.Message,
+                Data = null
+            };
+            return BadRequest(response);
         }
     }
 }

@@ -1,6 +1,6 @@
-﻿using Monopoly.Models;
+﻿using Monopoly.Models.GameModels;
 
-namespace Monopoly.Abstractions
+namespace Monopoly.Interfaces.IDatabases
 {
     public interface ICellRepository
     {

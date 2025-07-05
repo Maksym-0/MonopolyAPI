@@ -1,8 +1,8 @@
-﻿using Monopoly.Models;
+﻿using Monopoly.Models.GameModels;
 using Npgsql;
 using System.Data.Common;
 
-namespace Monopoly.Abstractions
+namespace Monopoly.Interfaces.IDatabases
 {
     public interface IPlayerRepository
     {

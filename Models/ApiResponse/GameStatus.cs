@@ -1,4 +1,6 @@
-﻿namespace Monopoly.Models
+﻿using Monopoly.Models.GameModels;
+
+namespace Monopoly.Models.APIResponse
 {
     public class GameStatus
     {

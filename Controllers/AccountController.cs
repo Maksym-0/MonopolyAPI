@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Monopoly.Models;
+using Monopoly.Models.ApiResponse;
 using Microsoft.AspNetCore.Authorization;
-using Monopoly.Service;
+using System.Security.Claims;
+using Monopoly.Interfaces.IServices;
+using Newtonsoft.Json.Linq;
 
 namespace Monopoly.Controllers
 {
@@ -10,33 +11,60 @@ namespace Monopoly.Controllers
     [Route("api/[controller]")]
     public class AccountController : ControllerBase
     {
-        private readonly ILogger<AccountController> logger;
-        private AccountService accountService = new AccountService();
-        public AccountController(ILogger<AccountController> logger)
+        private readonly IAccountService _accountService;
+        public AccountController(IAccountService accountService)
         {
-            this.logger = logger;
+            _accountService = accountService;
         }
         [Authorize]
         [HttpGet("me")]
         public IActionResult GetMyData()
         {
-            return Ok(User.Identity.Name);
+            return Ok(new ApiResponse<object>()
+            {
+                Success = true,
+                Message = "Дані користувача",
+                Data = new
+                {
+                    name = User.Identity.Name,
+                    id = User.FindFirst(ClaimTypes.NameIdentifier).Value
+                }
+            });
         }
         [HttpPost("register")]
-        public async Task<IActionResult> Register(Account accModel)
+        public async Task<IActionResult> Register(string name, string password)
         {
-            string? status = await accountService.TryRegisterAsync(accModel);
-            if (status != null)
-                return Ok(status);
-            return BadRequest("Користувача з обраним ім'м вже зареєстровано");
+            if (await _accountService.TryRegisterAsync(name, password))
+                return Ok(new ApiResponse<object>()
+                {
+                    Success = true,
+                    Message = "Обліковий запис успішно створено",
+                    Data = null
+                });
+            return BadRequest(new ApiResponse<object>()
+            {
+                Success = false,
+                Message = "Помилка при реєстрації",
+                Data = null
+            });
         }
         [HttpPost("login")]
         public async Task<IActionResult> Login(string name, string password)
         {
-            string? status = await accountService.TryLoginAsync(name, password);
-            if (status != null)
-                return Ok(status);
-            return BadRequest("Введено некоректне ім'я або пароль");
+            string? token = await _accountService.TryLoginAsync(name, password);
+            if (token != null)
+                return Ok(new ApiResponse<string>()
+                {
+                    Success = true,
+                    Message = "Успішний вхід до облікового запису. Отримано JWT токен",
+                    Data = token
+                });
+            return BadRequest(new ApiResponse<object>()
+            {
+                Success = false,
+                Message = "Введено некоректне ім'я або пароль",
+                Data = null
+            });
         }
     }
 }

@@ -1,12 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Monopoly.Models;
-using Monopoly.Database;
-using System.Numerics;
-using System.Reflection.Metadata.Ecma335;
-using System.Threading.Tasks;
-using Monopoly.Service;
+using Monopoly.Interfaces.IServices;
+using Monopoly.Models.ApiResponse;
+using Monopoly.Models.APIResponse;
+using Monopoly.Models.RoomModels;
+using System.Net;
+using System.Security.Claims;
 
 namespace Monopoly.Controllers
 {
@@ -15,44 +14,102 @@ namespace Monopoly.Controllers
     [Authorize]
     public class RoomController : ControllerBase
     {
-        private readonly ILogger<RoomController> logger;
-        private RoomService roomService = new RoomService();
-        public RoomController(ILogger<RoomController> logger)
+        private readonly IRoomService _roomService;
+
+        public RoomController(IRoomService roomService)
         {
-            this.logger = logger;
+            _roomService = roomService;
         }
+
         [HttpGet("rooms")]
         public async Task<IActionResult> GetRooms()
         {
-            List<Room> rooms = await roomService.GetAllRoomsAsync();
-            return Ok(rooms);
+            try
+            {
+                List<RoomResponse> rooms = await _roomService.GetAllRoomsAsync();
+                ApiResponse<List<RoomResponse>> response = new ApiResponse<List<RoomResponse>>()
+                {
+                    Success = true,
+                    Message = "Отримано список кімнат",
+                    Data = rooms
+                };
+                return Ok(response); 
+            }
+            catch(Exception ex)
+            {
+                return CatchBadRequest(ex);
+            }
         }
         [HttpPost("create")]
         public async Task<IActionResult> CreateRoom(int maxNumberOfPlayers, string? password)
         {
-            if (maxNumberOfPlayers < 2 || maxNumberOfPlayers > 4)
-                return BadRequest("Максимальна кількість гравців обмежена від 2 до 4 осіб");
-
-            await roomService.CreateRoomAsync(maxNumberOfPlayers, password, User.Identity.Name);
-            return Created();
+            try
+            {
+                RoomResponse room = await _roomService.CreateRoomAsync(maxNumberOfPlayers, password, User.FindFirst(ClaimTypes.NameIdentifier).Value, User.Identity.Name);
+                ApiResponse<RoomResponse> response = new ApiResponse<RoomResponse>()
+                {
+                    Success = true,
+                    Message = "Кімнату успішно створено",
+                    Data = room
+                };
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return CatchBadRequest(ex);
+            }
         }
         [HttpPut("{roomId}/join")]
         public async Task<IActionResult> JoinRoom(string roomId, string? password)
         {
-            string? check = await roomService.ValidJoinRoomAsync(roomId, password, User.Identity.Name);
-            if (check != null)
-                return BadRequest(check);
-            else
-                return Ok(await roomService.JoinRoomAsync(roomId, password, User.Identity.Name));
+            try
+            {
+                RoomResponse room = await _roomService.JoinRoomAsync(roomId, password, User.FindFirst(ClaimTypes.NameIdentifier).Value, User.Identity.Name);
+                string msg = "Ви зайшли до кімнати";
+                if (room.InGame)
+                    msg = "Ви зайшли до кімнати. Гру розпочато";
+                ApiResponse<RoomResponse> response = new ApiResponse<RoomResponse>()
+                {
+                    Success = true,
+                    Message = msg,
+                    Data = room
+                };
+                return Ok(response);
+            }
+            catch(Exception ex)
+            {
+                return CatchBadRequest(ex);
+            }
         }
-        [HttpPut("{roomId}/quit")]
-        public async Task<IActionResult> QuitRoom(string roomId)
+        [HttpPut("quit")]
+        public async Task<IActionResult> QuitRoom()
         {
-            string? check = await roomService.TryQuitRoomAsync(roomId, User.Identity.Name);
-            if (check != null)
-                return Ok(check);
-            else
-                return BadRequest("Неможливо покинути кімнату. Гравець відсутній в ній");
+            try
+            {
+                string msg = await _roomService.QuitRoomAsync(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+                ApiResponse<RoomResponse> response = new ApiResponse<RoomResponse>()
+                {
+                    Success = true,
+                    Message = msg,
+                    Data = null
+                };
+                return Ok(response);
+            }
+            catch(Exception ex)
+            {
+                return CatchBadRequest(ex);
+            }
+        }
+
+        private IActionResult CatchBadRequest(Exception ex)
+        {
+            ApiResponse<List<RoomResponse>> response = new ApiResponse<List<RoomResponse>>()
+            {
+                Success = false,
+                Message = ex.Message,
+                Data = null
+            };
+            return BadRequest(response);
         }
     }
 }

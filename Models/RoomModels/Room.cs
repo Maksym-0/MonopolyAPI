@@ -1,28 +1,25 @@
-﻿namespace Monopoly.Models
+﻿namespace Monopoly.Models.RoomModels
 {
     public class Room
     {
         public string RoomId { get; set; }
         public int MaxNumberOfPlayers { get; set; }
-        public int NumberOfPlayers { get; set; }
-        public List<string>? PlayerNames { get; set; }
+        public int CountOfPlayers { get; set; }
         public string? Password { get; set; }
         public bool InGame { get; set; }
-        public Room(string roomId, int maxNumberOfPlayers, List<string> playerNames)
+        public Room(string roomId, int maxNumberOfPlayers, int countOfPlayers)
         {
             RoomId = roomId;
             MaxNumberOfPlayers = maxNumberOfPlayers;
-            NumberOfPlayers = 0;
-            PlayerNames = playerNames;
+            CountOfPlayers = countOfPlayers;
             Password = null;
             InGame = false;
         }
-        public Room(string roomId, int maxNumberOfPlayers, List<string> playerNames, string password)
+        public Room(string roomId, int maxNumberOfPlayers, int countOfPlayers, string password)
         {
             RoomId = roomId;
             MaxNumberOfPlayers = maxNumberOfPlayers;
-            NumberOfPlayers = 0;
-            PlayerNames = playerNames;
+            CountOfPlayers = countOfPlayers;
             Password = password;
             InGame = false;
         }

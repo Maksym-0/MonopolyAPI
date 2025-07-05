@@ -1,17 +1,17 @@
 ﻿using Npgsql;
-using Monopoly;
-using Monopoly.Models;
-using Monopoly.Abstractions;
+using Monopoly.Interfaces.IDatabases;
+using Monopoly.Models.GameModels;
 
 namespace Monopoly.Database
 {
     public class DBCells : ICellRepository
     {
-        NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
+        private readonly NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
+        
         public async Task InsertCellsAsync(List<Cell> cells)
         {
             var sql = $"INSERT INTO PUBLIC.\"{Constants.DBcellName}\" (\"GameId\", \"Name\", \"Number\", \"Price\", \"Rent\", \"OwnerName\", \"Level\")" +
-                "VALUES (@GameId, @Name, @Number, @Price, @Rent, @OwnerName, @Level)";
+                "VALUES (@gameId, @name, @number, @price, @rent, @ownerName, @level)";
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
             
             await _connection.OpenAsync();
@@ -30,19 +30,22 @@ namespace Monopoly.Database
 
             var sql = $"SELECT \"GameId\", \"Name\", \"Number\", \"Price\", \"Rent\", \"OwnerName\", \"Level\" " +
                 $"FROM public.\"{Constants.DBcellName}\" " +
-                $"WHERE \"GameId\" = @GameId";
+                $"WHERE \"GameId\" = @gameId";
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
-            cmd.Parameters.AddWithValue("GameId", gameId);
+            cmd.Parameters.AddWithValue("gameId", gameId);
             await _connection.OpenAsync();
             NpgsqlDataReader npgsqlData = await cmd.ExecuteReaderAsync();
-
+            
             while (await npgsqlData.ReadAsync())
             {
                 Cell cell = ConstructCell(npgsqlData);
                 cells.Add(cell);
             };
             await _connection.CloseAsync();
+            if (cells.Count == 0)
+                throw new Exception("Клітини не знайдено");
+
             return cells;
         }
         public async Task<Cell> ReadCellAsync(string gameId, int cellNumber)
@@ -51,14 +54,20 @@ namespace Monopoly.Database
 
             var sql = $"SELECT \"GameId\", \"Name\", \"Number\", \"Price\", \"Rent\", \"OwnerName\", \"Level\" " +
                 $"FROM public.\"{Constants.DBcellName}\" " +
-                $"WHERE \"GameId\" = @GameId AND \"Number\" = @Number";
+                $"WHERE \"GameId\" = @gameId AND \"number\" = @Number";
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
-            cmd.Parameters.AddWithValue("GameId", gameId);
-            cmd.Parameters.AddWithValue("Number", cellNumber);
+            cmd.Parameters.AddWithValue("gameId", gameId);
+            cmd.Parameters.AddWithValue("number", cellNumber);
 
             await _connection.OpenAsync();
             NpgsqlDataReader npgsqlData = await cmd.ExecuteReaderAsync();
+            
+            if (!await npgsqlData.ReadAsync())
+            {
+                await _connection.CloseAsync();
+                throw new Exception("Клітину не знайдено");
+            }
 
             Cell cell = ConstructCell(npgsqlData);
             await _connection.CloseAsync();
@@ -68,10 +77,10 @@ namespace Monopoly.Database
         public async Task UpdateCellAsync(Cell cell)
         {
             var sql = $"UPDATE PUBLIC.\"{Constants.DBcellName}\" " +
-                $"SET \"Name\" = @Name, \"Price\" = @Price, \"Rent\" = @Rent, \"OwnerName\" = @OwnerName, \"Level\" = @Level " +
-                $"WHERE \"Number\" = @Number AND \"GameId\" = @GameId";
+                $"SET \"Name\" = @name, \"Price\" = @price, \"Rent\" = @rent, \"OwnerName\" = @ownerName, \"Level\" = @level " +
+                $"WHERE \"Number\" = @number AND \"GameId\" = @gameId";
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
-
+            
             AddWithValue(cmd, cell);
 
             await _connection.OpenAsync();
@@ -81,10 +90,10 @@ namespace Monopoly.Database
         public async Task DeleteCellsAsync(string gameId)
         {
             var sql = $"DELETE FROM PUBLIC.\"{Constants.DBcellName}\" " +
-                $"WHERE \"GameId\" = @GameId";
+                $"WHERE \"GameId\" = @gameId";
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
-            cmd.Parameters.AddWithValue("GameId", gameId);
+            cmd.Parameters.AddWithValue("gameId", gameId);
 
             await _connection.OpenAsync();
             await cmd.ExecuteNonQueryAsync();
@@ -107,7 +116,7 @@ namespace Monopoly.Database
                     Number = npgsqlData.GetInt32(2),
                     Price = npgsqlData.GetInt32(3),
                     Rent = npgsqlData.GetInt32(4),
-                    OwnerName = npgsqlData.GetString(5),
+                    Owner = npgsqlData.GetString(5),
                     Level = npgsqlData.GetInt32(6),
                 };
             }
@@ -115,16 +124,16 @@ namespace Monopoly.Database
         }
         private void AddWithValue(NpgsqlCommand cmd, Cell cell)
         {
-            cmd.Parameters.AddWithValue("GameId", cell.GameId);
-            cmd.Parameters.AddWithValue("Name", cell.Name);
-            cmd.Parameters.AddWithValue("Number", cell.Number);
-            if (cell.Price == null) cmd.Parameters.AddWithValue("Price", DBNull.Value);
-            else cmd.Parameters.AddWithValue("Price", cell.Price);
-            if (cell.Rent == null) cmd.Parameters.AddWithValue("Rent", DBNull.Value);
-            else cmd.Parameters.AddWithValue("Rent", cell.Rent);
-            if (cell.OwnerName == null) cmd.Parameters.AddWithValue("OwnerName", DBNull.Value);
-            else cmd.Parameters.AddWithValue("OwnerName", cell.OwnerName);
-            cmd.Parameters.AddWithValue("Level", cell.Level);
+            cmd.Parameters.AddWithValue("gameId", cell.GameId);
+            cmd.Parameters.AddWithValue("name", cell.Name);
+            cmd.Parameters.AddWithValue("number", cell.Number);
+            if (cell.Price == null) cmd.Parameters.AddWithValue("price", DBNull.Value);
+            else cmd.Parameters.AddWithValue("price", cell.Price);
+            if (cell.Rent == null) cmd.Parameters.AddWithValue("rent", DBNull.Value);
+            else cmd.Parameters.AddWithValue("rent", cell.Rent);
+            if (cell.Owner == null) cmd.Parameters.AddWithValue("ownerName", DBNull.Value);
+            else cmd.Parameters.AddWithValue("ownerName", cell.Owner);
+            cmd.Parameters.AddWithValue("level", cell.Level);
         }
     }
 }

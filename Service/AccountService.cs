@@ -1,38 +1,62 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Monopoly.Database;
-using Monopoly.Models;
+using Monopoly.Interfaces.IDatabases;
+using Monopoly.Interfaces.IServices;
+using Monopoly.Models.AcountModels;
+using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
 namespace Monopoly.Service
 {
-    public class AccountService
+    public class AccountService : IAccountService
     {
-        public async Task<string?> TryRegisterAsync(Account accModel)
+        Random random = new Random();
+        IAccountRepository dbAccount;
+
+        public AccountService(IAccountRepository accountRepository) 
         {
-            if (await CheckName(accModel.Name))
-                return null;
+            dbAccount = accountRepository;
+        }
 
-            DBAccount acc = new DBAccount();
+        public async Task<bool> TryRegisterAsync(string name, string password)
+        {
+            if (await dbAccount.SearchUserWithNameAsync(name))
+                return false;
 
-            await acc.InsertAccountAsync(accModel);
-            return "Користувача зареєстровано";
+            Account account = new Account(await GenerateIdAsync(12), name, password);
+
+            await dbAccount.InsertAccountAsync(account);
+            return true;
         }
         public async Task<string?> TryLoginAsync(string name, string password)
         {
-            DBAccount acc = new DBAccount();
-            Account account = await acc.ReadAccountAsync(name);
+            Account account = await dbAccount.ReadAccountAsync(name);
 
             if (password == account.Password)
             {
-                string token = GenerateToken(account.ID, account.Name);
+                string token = GenerateToken(account.Id, account.Name);
                 return token;
             }
             return null;
         }
-        
+
+        private async Task<string> GenerateIdAsync(int length)
+        {
+            string id = "";
+            do
+            {
+                id = "";
+                for (int i = 0; i < length; i++)
+                {
+                    id += random.Next(0, 10);
+                }
+            } while (await dbAccount.SearchUserWithIdAsync(id));
+
+            return id;
+        }
         private string GenerateToken(string id, string name)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -40,24 +64,17 @@ namespace Monopoly.Service
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, name) }),
+                Subject = new ClaimsIdentity
+                (new[]{ 
+                        new Claim(ClaimTypes.Name, name), 
+                        new Claim(ClaimTypes.NameIdentifier, id) 
+                    }),
                 Expires = DateTime.UtcNow.AddHours(12),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
-        }
-        private async Task<bool> CheckName(string name)
-        {
-            DBAccount dbAccount = new DBAccount();
-            List<Account> players = await dbAccount.ReadAccountListAsync();
-            for (int i = 0; i < players.Count; i++)
-            {
-                if (players[i].Name == name)
-                    return true;
-            }
-            return false;
         }
     }
 }

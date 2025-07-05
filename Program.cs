@@ -2,12 +2,13 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Monopoly;
+using Monopoly.Service;
+using Monopoly.Database;
+using Monopoly.Interfaces.IServices;
+using Monopoly.Interfaces.IDatabases;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-
-Constants.JwtKey = Environment.GetEnvironmentVariable("JWT_KEY") ?? "my_secret_key_1234567891011121314151617181920";
-
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -30,6 +31,17 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
+builder.Services.AddScoped<IAccountRepository, DBAccount>();
+builder.Services.AddScoped<ICellRepository, DBCells>();
+builder.Services.AddScoped<IPlayerInRoomRepository, DBPlayerInRoom>();
+builder.Services.AddScoped<IPlayerRepository, DBPlayerStatus>();
+builder.Services.AddScoped<IRoomRepository, DBRoom>();
+
+builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IRoomService, RoomService>();
+builder.Services.AddScoped<IGameService, GameService>();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {

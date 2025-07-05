@@ -1,145 +1,41 @@
-﻿using Monopoly;
-using Monopoly.Models;
-using Monopoly.Database;
-using System.Numerics;
-using Microsoft.AspNetCore.Mvc;
+﻿using Monopoly.Interfaces.IServices;
+using Monopoly.Interfaces.IDatabases;
+using Monopoly.Models.GameModels;
+using Monopoly.Models.APIResponse;
 namespace Monopoly.Service
 {
-    public class GameService
+    public class GameService : IGameService
     {
-        public async Task<string?> ValidateMoveAsync(string gameId, string name)
+        private Random random = new Random();
+        private readonly ICellRepository dbCells;
+        private readonly IPlayerRepository dbPlayer;
+        private readonly IRoomRepository dbRoom;
+
+        public GameService(ICellRepository cellRepository, IPlayerRepository playerRepository, IRoomRepository roomRepository) 
         {
-            DBPlayerStatus dbPlayer = new DBPlayerStatus();
-            Player player = await dbPlayer.ReadPlayerAsync(gameId, name);
-
-            if (!player.InGame)
-                return "Гравець поза грою";
-            else if (!player.HisAction)
-                return "Гравець не може ходити не в свій хід";
-            else if (!player.CanMove)
-                return "Гравець більше не може кидати кубики та рухатись";
-            return null;
-        }
-        public async Task<string?> ValidatePayAsync(string gameId, string name)
-        {
-            DBPlayerStatus dbPlayer = new DBPlayerStatus();
-            Player player = await dbPlayer.ReadPlayerAsync(gameId, name);
-
-            if (!player.InGame)
-                return "Гравець поза грою";
-            else if (!player.NeedPay)
-                return "Гравець не повинен платити";
-            return null;
-        }
-        public async Task<string?> ValidateBuyAsync(string gameId, string name)
-        {
-            DBCells dbCells = new DBCells();
-            DBPlayerStatus dbPlayer = new DBPlayerStatus();
-            
-            Player player = await dbPlayer.ReadPlayerAsync(gameId, name);
-            Cell cell = await dbCells.ReadCellAsync(gameId, player.Location);
-
-            if (!player.InGame)
-                return "Гравець поза грою";
-            else if (!player.CanBuyCell)
-                return "Гравець не може придбати клітину";
-            else if (cell.OwnerName != null)
-                return "Неможливо придбати клітину, що належить іншому гравцю";
-                return null;
-        }
-        public async Task<string?> ValidateLevelUpAsync(string gameId, string name, int cellNumber)
-        {
-            DBPlayerStatus dbPlayer = new DBPlayerStatus();
-            DBCells dbCells = new DBCells();
-
-            Player player = await dbPlayer.ReadPlayerAsync(gameId, name);
-            Cell cell = await dbCells.ReadCellAsync(gameId, cellNumber);
-
-            if (!player.InGame)
-                return "Гравець поза грою";
-            else if (!player.CanLevelUpCell)
-                return "Гравець не може підняти рівень клітини";
-            if (Constants.SpecialCellNames.Contains(Constants.CellNames[cellNumber]))
-                return "Неможливо змінити рівень особливої клітини";
-            else if (!await cell.CheckMonopoly())
-                return "Відсутня монополія, підняти рівень клітини неможливо";
-            else if (cell.OwnerName != name)
-                return "Заборонено змінювти рівень клітини, що Вам не належить";
-            else if (cell.Level == 5)
-                return "Рівень обраної клітини вже є максимальний";
-            else if (player.Balance < Constants.CellBuildAndSellCost[cellNumber])
-                return "Вам не стане коштів на це будівництво";
-            return null;
-        }
-        public async Task<string?> ValidateLevelDownAsync(string gameId, string name, int cellNumber)
-        {
-            DBPlayerStatus dbPlayer = new DBPlayerStatus();
-            DBCells dbCells = new DBCells();
-
-            Player player = await dbPlayer.ReadPlayerAsync(gameId, name);
-            Cell cell = await dbCells.ReadCellAsync(gameId, cellNumber);
-
-            if (!player.InGame)
-                return "Гравець поза грою";
-            else if (!player.HisAction)
-                return "Гравець не може змінювати рівень клітин не в свій хід";
-            else if (cell.OwnerName != name)
-                return "Заборонено змінювти рівень клітини, що Вам не належить";
-            else if (cell.Level == 0)
-                return "Рівень обраної клітини вже є мінімальний";
-            return null;
-        }
-        public async Task<string?> ValidateEndActionAsync(string gameId, string name)
-        {
-            DBPlayerStatus dbPlayer = new DBPlayerStatus();
-            Player player = await dbPlayer.ReadPlayerAsync(gameId, name);
-
-            if (!player.InGame)
-                return "Гравець вже поза грою";
-            else if (!player.HisAction)
-                return "Гравець не може завершити нерозпочатий хід";
-            else if (player.CanMove)
-                return "Гравець не може завершити хід, не кинувши кубики";
-            else if (player.NeedPay)
-                return "Гравець не може завершити хід, не оплативши рахунки";
-            return null;
-        }
-        public async Task<string?> ValidateLeaveAsync(string gameId, string name)
-        {
-            DBPlayerStatus dbPlayer = new DBPlayerStatus();
-            Player player = await dbPlayer.ReadPlayerAsync(gameId, name);
-
-            if (!player.InGame)
-                return "Гравець вже поза грою";
-            return null;
+            dbCells = cellRepository;
+            dbPlayer = playerRepository;
+            dbRoom = roomRepository;
         }
 
         public async Task<GameStatus> StatusOfGameAsync(string gameId)
         {
-            DBCells dbCells = new DBCells();
-            DBPlayerStatus dbPlayer = new DBPlayerStatus();
-
-            List<Player> players = new List<Player>();
-            List<Cell> cells = new List<Cell>();
-
-            cells = await dbCells.ReadCellListAsync(gameId);
-            players = await dbPlayer.ReadPlayerListAsync(gameId);
+            List<Player> players = await dbPlayer.ReadPlayerListAsync(gameId);
+            List<Cell> cells = await dbCells.ReadCellListAsync(gameId);
 
             GameStatus gameStatus = new GameStatus(gameId, cells, players);
 
             return gameStatus;
         }
-        public async Task<string> MoveAsync(string gameId, string playerName)
+        public async Task<string> MoveAsync(string gameId, string playerId)
         {
-            DBCells dbCells = new DBCells();
-            DBPlayerStatus dbPlayer = new DBPlayerStatus();
-
-            Player player = await dbPlayer.ReadPlayerAsync(gameId, playerName);
-
-            List<Player> players = new List<Player>();
-            List<Cell> cells = new List<Cell>();
-            cells = await dbCells.ReadCellListAsync(gameId);
-            players = await dbPlayer.ReadPlayerListAsync(gameId);
+            string? isValid = await ValidateMoveAsync(gameId, playerId);
+            if (isValid != null)
+                throw new Exception(isValid);
+            
+            Player player = await dbPlayer.ReadPlayerAsync(gameId, playerId);
+            List<Player> players = await dbPlayer.ReadPlayerListAsync(gameId);
+            List<Cell> cells = await dbCells.ReadCellListAsync(gameId);
 
             Dice dice = new Dice();
 
@@ -159,12 +55,13 @@ namespace Monopoly.Service
             }
             return await CellEffectAsync(player, cells);
         }
-        public async Task<string?> TryPayAsync(string gameId, string playerName)
+        public async Task<bool> TryPayAsync(string gameId, string playerId)
         {
-            DBCells dbCells = new DBCells();
-            DBPlayerStatus dbPlayer = new DBPlayerStatus();
+            string? isValid = await ValidatePayAsync(gameId, playerId);
+            if (isValid != null)
+                throw new Exception(isValid);
 
-            Player player = await dbPlayer.ReadPlayerAsync(gameId, playerName);
+            Player player = await dbPlayer.ReadPlayerAsync(gameId, playerId);
             Cell cell = await dbCells.ReadCellAsync(gameId, player.Location);
 
             if (Constants.SpecialCellNames.Contains(cell.Name))
@@ -174,85 +71,89 @@ namespace Monopoly.Service
                     if (player.PayToLeavePrison())
                     {
                         await dbPlayer.UpdatePlayerAsync(player);
-                        return "Ви покинули в'язницю!";
+                        return true;
                     }
-                    return null;
-                }
+                    return false;
+                } // Можливо треба переписати
             }
             if (player.Balance < cell.Rent)
             {
-                return null;
+                return false;
             }
             else
             {
                 player.PayRent(Convert.ToInt32(cell.Rent));
                 await dbPlayer.UpdatePlayerAsync(player);
-                return "Оплату проведено";
+                return true;
             }
         }
-        public async Task<string?> TryBuyAsync(string gameId, string playerName)
+        public async Task<bool> TryBuyAsync(string gameId, string playerId)
         {
-            DBCells dbCells = new DBCells();
-            DBPlayerStatus dbPlayer = new DBPlayerStatus();
+            string? isValid = await ValidateBuyAsync(gameId, playerId);
+            if (isValid != null)
+                throw new Exception(isValid);
 
-            Player player = await dbPlayer.ReadPlayerAsync(gameId, playerName);
+            Player player = await dbPlayer.ReadPlayerAsync(gameId, playerId);
             Cell cell = await dbCells.ReadCellAsync(gameId, player.Location);
             
-            if (player.Balance >= cell.Price)
-            {
-                player.Buy(Convert.ToInt32(cell.Price));
-                cell.OwnerName = player.Name;
-                await dbPlayer.UpdatePlayerAsync(player);
-                await dbCells.UpdateCellAsync(cell);
-                return "Клітину придбано";
-            }
-            else return null;
+            player.DeductMoney(Convert.ToInt32(cell.Price));
+            cell.Owner = player.Name;
+            
+            await dbPlayer.UpdatePlayerAsync(player);
+            await dbCells.UpdateCellAsync(cell);
+            return true;
         }
-        public async Task<string> LevelUpAsync(string gameId, string playerName, int cellNumber)
+        public async Task LevelUpAsync(string gameId, string playerId, int cellNumber)
         {
-            DBCells dbCells = new DBCells();
-            DBPlayerStatus dbPlayer = new DBPlayerStatus();
+            string? isValid = await ValidateLevelUpAsync(gameId, playerId, cellNumber);
+            if (isValid != null)
+                throw new Exception(isValid);
 
-            Player player = await dbPlayer.ReadPlayerAsync(gameId, playerName);
+            Player player = await dbPlayer.ReadPlayerAsync(gameId, playerId);
             Cell cell = await dbCells.ReadCellAsync(gameId, cellNumber);
 
             player.PayToUpgrade(Constants.CellBuildAndSellCost[cellNumber]);
             cell.ChangeCellLevel(cell.Level + 1);
+            
             await dbPlayer.UpdatePlayerAsync(player);
             await dbCells.UpdateCellAsync(cell);
-            return "Рівень клітини піднято";
         }
-        public async Task<string> LevelDownAsync(string gameId, string playerName, int cellNumber)
+        public async Task LevelDownAsync(string gameId, string playerId, int cellNumber)
         {
-            DBCells dbCells = new DBCells();
-            DBPlayerStatus dbPlayer = new DBPlayerStatus();
+            string? isValid = await ValidateLevelDownAsync(gameId, playerId, cellNumber);
+            if (isValid != null)
+                throw new Exception(isValid);
 
-            Player player = await dbPlayer.ReadPlayerAsync(gameId, playerName);
+            Player player = await dbPlayer.ReadPlayerAsync(gameId, playerId);
             Cell cell = await dbCells.ReadCellAsync(gameId, cellNumber);
 
             player.Balance += Constants.CellBuildAndSellCost[cellNumber];
             cell.ChangeCellLevel(cell.Level - 1);
+            
             await dbPlayer.UpdatePlayerAsync(player);
             await dbCells.UpdateCellAsync(cell);
-            return "Рівень клітини знижено";
         }
-        public async Task<string> EndActionAsync(string gameId, string playerName)
+        public async Task<string> EndActionAsync(string gameId, string playerId)
         {
-            DBPlayerStatus dbPlayer = new DBPlayerStatus();
+            string? isValid = await ValidateEndActionAsync(gameId, playerId);
+            if (isValid != null)
+                throw new Exception(isValid);
 
-            Player player = await dbPlayer.ReadPlayerAsync(gameId, playerName);
+            Player player = await dbPlayer.ReadPlayerAsync(gameId, playerId);
 
             player.StopAction();
             await dbPlayer.UpdatePlayerAsync(player);
-            string newPlayer = await ActionNextPlayer(gameId, playerName);
+            
+            string newPlayer = await ActionNextPlayer(gameId, playerId);
             return $"Хід гравця завершено та передано {newPlayer}";
         }
-        public async Task<string> LeaveGameAsync(string gameId, string payerName)
+        public async Task<string> LeaveGameAsync(string gameId, string playerId)
         {
-            DBCells dbCells = new DBCells();
-            DBPlayerStatus dbPlayer = new DBPlayerStatus();
+            string? isValid = await ValidateLeaveAsync(gameId, playerId);
+            if (isValid != null)
+                throw new Exception(isValid);
 
-            Player player = await dbPlayer.ReadPlayerAsync(gameId, payerName);
+            Player player = await dbPlayer.ReadPlayerAsync(gameId, playerId);
             player.StopAction();
             player.InGame = false;
 
@@ -261,32 +162,126 @@ namespace Monopoly.Service
             for (int i = 0; i < cells.Count; i++)
             {
                 Cell cell = cells[i];
-                if (cell.OwnerName == payerName)
+                if (cell.Owner == playerId)
                 {
                     cell.Price = Constants.CellPrices[i];
                     cell.Rent = Constants.CellStartRents[i];
-                    cell.OwnerName = null;
+                    cell.Owner = null;
                     cell.Level = 0;
                     await dbCells.UpdateCellAsync(cell);
                 }
             }
-            string? winner = await ChekWin(gameId);
+            string? winner = await ChekWinner(gameId);
             if (winner != null)
             {
-                DeleteGameInMinutes(gameId);
+                DeleteGameAndRoom(gameId);
                 return $"Гравець покинув гру. Переможець: {winner}";
             }
             return "Гравець покинув гру";
         }
 
+        private async Task<string?> ValidateMoveAsync(string gameId, string playerId)
+        {
+            Player player = await dbPlayer.ReadPlayerAsync(gameId, playerId);
+
+            if (!player.InGame)
+                return "Гравець поза грою";
+            else if (!player.HisAction)
+                return "Гравець не може ходити не в свій хід";
+            else if (!player.CanMove)
+                return "Гравець більше не може кидати кубики та рухатись";
+            return null;
+        }
+        private async Task<string?> ValidatePayAsync(string gameId, string playerId)
+        {
+            Player player = await dbPlayer.ReadPlayerAsync(gameId, playerId);
+
+            if (!player.InGame)
+                return "Гравець поза грою";
+            else if (!player.NeedPay)
+                return "Гравець не повинен платити";
+            return null;
+        }
+        private async Task<string?> ValidateBuyAsync(string gameId, string playerId)
+        {
+            Player player = await dbPlayer.ReadPlayerAsync(gameId, playerId);
+            Cell cell = await dbCells.ReadCellAsync(gameId, player.Location);
+
+            if (!player.InGame)
+                return "Гравець поза грою";
+            else if (!player.CanBuyCell)
+                return "Гравець не може придбати клітину";
+            else if (cell.Owner != null)
+                return "Неможливо придбати клітину, що належить іншому гравцю";
+            else if (player.Balance < cell.Price)
+                return "Неможливо придбати клітину. Недостатньо коштів";
+            return null;
+        }
+        private async Task<string?> ValidateLevelUpAsync(string gameId, string playerId, int cellNumber)
+        {
+            Player player = await dbPlayer.ReadPlayerAsync(gameId, playerId);
+            Cell cell = await dbCells.ReadCellAsync(gameId, cellNumber);
+
+            if (!player.InGame)
+                return "Гравець поза грою";
+            else if (!player.CanLevelUpCell)
+                return "Гравець не може підняти рівень клітини";
+            if (Constants.SpecialCellNames.Contains(Constants.CellNames[cellNumber]))
+                return "Неможливо змінити рівень особливої клітини";
+            else if (!await cell.CheckMonopoly())
+                return "Відсутня монополія, підняти рівень клітини неможливо";
+            else if (cell.Owner != playerId)
+                return "Заборонено змінювти рівень клітини, що Вам не належить";
+            else if (cell.Level == 5)
+                return "Рівень обраної клітини вже є максимальний";
+            else if (player.Balance < Constants.CellBuildAndSellCost[cellNumber])
+                return "Вам не стане коштів на це будівництво";
+            return null;
+        }
+        private async Task<string?> ValidateLevelDownAsync(string gameId, string playerId, int cellNumber)
+        {
+            Player player = await dbPlayer.ReadPlayerAsync(gameId, playerId);
+            Cell cell = await dbCells.ReadCellAsync(gameId, cellNumber);
+
+            if (!player.InGame)
+                return "Гравець поза грою";
+            else if (!player.HisAction)
+                return "Гравець не може змінювати рівень клітин не в свій хід";
+            else if (cell.Owner != playerId)
+                return "Заборонено змінювти рівень клітини, що Вам не належить";
+            else if (cell.Level == 0)
+                return "Рівень обраної клітини вже є мінімальний";
+            return null;
+        }
+        private async Task<string?> ValidateEndActionAsync(string gameId, string playerId)
+        {
+            Player player = await dbPlayer.ReadPlayerAsync(gameId, playerId);
+
+            if (!player.InGame)
+                return "Гравець вже поза грою";
+            else if (!player.HisAction)
+                return "Гравець не може завершити нерозпочатий хід";
+            else if (player.CanMove)
+                return "Гравець не може завершити хід, не кинувши кубики";
+            else if (player.NeedPay)
+                return "Гравець не може завершити хід, не оплативши рахунки";
+            return null;
+        }
+        private async Task<string?> ValidateLeaveAsync(string gameId, string playerId)
+        {
+            Player player = await dbPlayer.ReadPlayerAsync(gameId, playerId);
+
+            if (!player.InGame)
+                return "Гравець вже поза грою";
+            return null;
+        }
+
         private async Task<string> CellEffectAsync(Player player, List<Cell> cells)
         {
-            DBPlayerStatus dbPlayer = new DBPlayerStatus();
-            
             Cell cell = cells[player.Location];
-            if (Constants.SpecialCellNames.Contains(cell.Name))
+
+            if (cell.Unique)
             {
-                Random random = new Random();
                 switch (cell.Name)
                 {
                     case "Старт":
@@ -326,13 +321,12 @@ namespace Monopoly.Service
                         player.ReverseMove = 1;
                         await dbPlayer.UpdatePlayerAsync(player);
                         return "Ви потрапили на клітину Зворотній хід. Наступний хід відбудеться у зворотньому напрямку";
-                    case "Торнадо":
-                        return "Можливість не реалізовано";
                     default:
+                        await dbPlayer.UpdatePlayerAsync(player);
                         return "Невідома особлива клітина";
                 }
             }
-            else if (cell.OwnerName == null)
+            else if (cell.Owner == null)
             {
                 player.CanBuyCell = true;
                 await dbPlayer.UpdatePlayerAsync(player);
@@ -345,17 +339,17 @@ namespace Monopoly.Service
                 return "Ви потрапили на територію чужої компанії. Необхідно сплатити рахунки";
             }
         }
-        private async Task<string> ActionNextPlayer(string gameId, string oldPlayerName)
+        private async Task<string> ActionNextPlayer(string gameId, string oldPlayerId)
         {
-            DBPlayerStatus dbPlayer = new DBPlayerStatus();
             List<Player> players = await dbPlayer.ReadPlayerListAsync(gameId);
-            Player nextPlayer = players[players.FindIndex(p => p.Name == oldPlayerName)];
+            Player nextPlayer = players[players.FindIndex(p => p.Id == oldPlayerId)];
+
             while (true)
             {
                 nextPlayer = players[(players.FindIndex(p => p.Name == nextPlayer.Name) + 1) % players.Count];
-
                 if (nextPlayer.InGame == false) continue;
-                else if (nextPlayer.IsPrisoner == true)
+
+                if (nextPlayer.IsPrisoner == true)
                 {
                     if (nextPlayer.CantAction < 1)
                     {
@@ -383,11 +377,9 @@ namespace Monopoly.Service
                 }
             }
         }
-        private async Task<string?> ChekWin(string gameId)
+        private async Task<string?> ChekWinner(string gameId)
         {
-            DBPlayerStatus playerStatus = new DBPlayerStatus();
-
-            List<Player> players = await playerStatus.ReadPlayerListAsync(gameId);
+            List<Player> players = await dbPlayer.ReadPlayerListAsync(gameId);
             int playersInGame = 0;
             string winner = "";
             for (int i = 0; i < players.Count; i++)
@@ -401,16 +393,11 @@ namespace Monopoly.Service
             if (playersInGame == 1) return winner;
             return null;
         }
-        private async Task DeleteGameInMinutes(string gameId)
+        private async Task DeleteGameAndRoom(string gameId)
         {
-            DBPlayerStatus dbPlayer = new DBPlayerStatus();
-            DBCells dbCells = new DBCells();
-            DBRoom dbRoom = new DBRoom();
-            dbRoom.DeleteRoomAsync(gameId);
-            await Task.Delay(TimeSpan.FromMinutes(3));
-
-            dbCells.DeleteCellsAsync(gameId);
-            dbPlayer.DeletePlayersAsync(gameId);
+            await dbRoom.DeleteRoomAsync(gameId);
+            await dbCells.DeleteCellsAsync(gameId);
+            await dbPlayer.DeletePlayersAsync(gameId);
         }
     }
 }
