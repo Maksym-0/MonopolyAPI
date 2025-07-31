@@ -7,7 +7,7 @@ namespace Monopoly.Models.APIResponse
         public string RoomId { get; set; }
         public int MaxNumberOfPlayers { get; set; }
         public int NumberOfPlayers { get; set; }
-        public List<PlayerInRoom> PlayerNames { get; set; }
+        public List<PlayerInRoom> Players { get; set; }
         public bool HavePassword { get; set; }
         public bool InGame { get; set; }
         public RoomResponse(Room room, List<PlayerInRoom> players)
@@ -15,7 +15,7 @@ namespace Monopoly.Models.APIResponse
             RoomId = room.RoomId;
             MaxNumberOfPlayers = room.MaxNumberOfPlayers;
             NumberOfPlayers = room.CountOfPlayers;
-            PlayerNames = players;
+            Players = players;
             if(room.Password != null)
                 HavePassword = true;
             else HavePassword = false;

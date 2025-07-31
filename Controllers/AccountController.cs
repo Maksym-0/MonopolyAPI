@@ -3,12 +3,12 @@ using Monopoly.Models.ApiResponse;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using Monopoly.Interfaces.IServices;
-using Newtonsoft.Json.Linq;
+using Monopoly.Models.Request;
 
 namespace Monopoly.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/account")]
     public class AccountController : ControllerBase
     {
         private readonly IAccountService _accountService;
@@ -26,15 +26,15 @@ namespace Monopoly.Controllers
                 Message = "Дані користувача",
                 Data = new
                 {
-                    name = User.Identity.Name,
-                    id = User.FindFirst(ClaimTypes.NameIdentifier).Value
+                    Id = User.FindFirst(ClaimTypes.NameIdentifier).Value,
+                    Name = User.Identity.Name
                 }
             });
         }
         [HttpPost("register")]
-        public async Task<IActionResult> Register(string name, string password)
+        public async Task<IActionResult> Register([FromBody] AccountRequest dto)
         {
-            if (await _accountService.TryRegisterAsync(name, password))
+            if (await _accountService.TryRegisterAsync(dto.Name, dto.Password))
                 return Ok(new ApiResponse<object>()
                 {
                     Success = true,
@@ -49,9 +49,18 @@ namespace Monopoly.Controllers
             });
         }
         [HttpPost("login")]
-        public async Task<IActionResult> Login(string name, string password)
+        public async Task<IActionResult> Login([FromBody] AccountRequest dto)
         {
-            string? token = await _accountService.TryLoginAsync(name, password);
+            string? token;
+            try { token = await _accountService.TryLoginAsync(dto.Name, dto.Password); }
+            catch(Exception ex) {
+                return BadRequest(new ApiResponse<string>()
+                {
+                    Success = false,
+                    Message = "Введено некоректне ім'я або пароль",
+                    Data = ex.Message
+                });
+            }
             if (token != null)
                 return Ok(new ApiResponse<string>()
                 {
@@ -59,7 +68,7 @@ namespace Monopoly.Controllers
                     Message = "Успішний вхід до облікового запису. Отримано JWT токен",
                     Data = token
                 });
-            return BadRequest(new ApiResponse<object>()
+            return BadRequest(new ApiResponse<string>()
             {
                 Success = false,
                 Message = "Введено некоректне ім'я або пароль",

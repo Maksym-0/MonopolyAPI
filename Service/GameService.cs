@@ -10,20 +10,23 @@ namespace Monopoly.Service
         private readonly ICellRepository dbCells;
         private readonly IPlayerRepository dbPlayer;
         private readonly IRoomRepository dbRoom;
+        private readonly IPlayerInRoomRepository dbPlayerInRoom;
 
-        public GameService(ICellRepository cellRepository, IPlayerRepository playerRepository, IRoomRepository roomRepository) 
+        public GameService(ICellRepository cellRepository, IPlayerRepository playerRepository, 
+            IRoomRepository roomRepository, IPlayerInRoomRepository playerInRoomRepository) 
         {
             dbCells = cellRepository;
             dbPlayer = playerRepository;
             dbRoom = roomRepository;
+            dbPlayerInRoom = playerInRoomRepository;
         }
 
-        public async Task<GameStatus> StatusOfGameAsync(string gameId)
+        public async Task<GameReponse> StatusOfGameAsync(string gameId)
         {
             List<Player> players = await dbPlayer.ReadPlayerListAsync(gameId);
             List<Cell> cells = await dbCells.ReadCellListAsync(gameId);
 
-            GameStatus gameStatus = new GameStatus(gameId, cells, players);
+            GameReponse gameStatus = new GameReponse(gameId, cells, players);
 
             return gameStatus;
         }
@@ -40,6 +43,7 @@ namespace Monopoly.Service
             Dice dice = new Dice();
 
             player.CanMove = false;
+            player.LastDiceResult = dice;
 
             int oldLocation = player.Location;
             if (player.ReverseMove > 0)
@@ -74,7 +78,7 @@ namespace Monopoly.Service
                         return true;
                     }
                     return false;
-                } // Можливо треба переписати
+                }
             }
             if (player.Balance < cell.Rent)
             {
@@ -156,6 +160,7 @@ namespace Monopoly.Service
             Player player = await dbPlayer.ReadPlayerAsync(gameId, playerId);
             player.StopAction();
             player.InGame = false;
+            await dbPlayer.UpdatePlayerAsync(player);
 
             List<Cell> cells = await dbCells.ReadCellListAsync(gameId);
 
@@ -174,7 +179,7 @@ namespace Monopoly.Service
             string? winner = await ChekWinner(gameId);
             if (winner != null)
             {
-                DeleteGameAndRoom(gameId);
+                await DeleteGameAndRoom(gameId);
                 return $"Гравець покинув гру. Переможець: {winner}";
             }
             return "Гравець покинув гру";
@@ -228,7 +233,7 @@ namespace Monopoly.Service
                 return "Гравець не може підняти рівень клітини";
             if (Constants.SpecialCellNames.Contains(Constants.CellNames[cellNumber]))
                 return "Неможливо змінити рівень особливої клітини";
-            else if (!await cell.CheckMonopoly())
+            else if (!await CheckMonopoly(cell))
                 return "Відсутня монополія, підняти рівень клітини неможливо";
             else if (cell.Owner != playerId)
                 return "Заборонено змінювти рівень клітини, що Вам не належить";
@@ -377,6 +382,25 @@ namespace Monopoly.Service
                 }
             }
         }
+        private async Task<bool> CheckMonopoly(Cell cell)
+        {
+            int monopolyIndex = Constants.CellsMonopolyIndex[cell.Number];
+            List<Cell> cells = await dbCells.ReadCellListAsync(cell.GameId);
+
+            List<Cell> monopolyCells = new List<Cell>();
+            for (int i = 0; i < Constants.CellsMonopolyIndex.Count; i++)
+            {
+                if (Constants.CellsMonopolyIndex[i] == monopolyIndex)
+                    monopolyCells.Add(cells[i]);
+            }
+            for (int i = 0; i < monopolyCells.Count; i++)
+            {
+                if (monopolyCells[i].Owner != cell.Owner)
+                    return false;
+            }
+            return true;
+        }
+
         private async Task<string?> ChekWinner(string gameId)
         {
             List<Player> players = await dbPlayer.ReadPlayerListAsync(gameId);
@@ -395,9 +419,12 @@ namespace Monopoly.Service
         }
         private async Task DeleteGameAndRoom(string gameId)
         {
-            await dbRoom.DeleteRoomAsync(gameId);
-            await dbCells.DeleteCellsAsync(gameId);
-            await dbPlayer.DeletePlayersAsync(gameId);
+            var deleteRoomTask = dbRoom.DeleteRoomAsync(gameId);
+            var deletePlayersInRoomTask = dbPlayerInRoom.DeleteAllPlayersInRoomAsync(gameId);
+            var deleteCellsTask = dbCells.DeleteCellsAsync(gameId);
+            var deletePlayersTask = dbPlayer.DeletePlayersAsync(gameId);
+
+            await Task.WhenAll(deleteRoomTask, deletePlayersInRoomTask, deleteCellsTask, deletePlayersTask);
         }
     }
 }

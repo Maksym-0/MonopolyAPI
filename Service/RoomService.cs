@@ -28,6 +28,7 @@ namespace Monopoly.Service
         {
             List<Room> rooms = await dbRoom.ReadRoomListAsync();
             List<RoomResponse> roomResponces = new List<RoomResponse>();
+
             if (rooms.Count == 0)
                 return new List<RoomResponse>();
             for (int i = 0; i < rooms.Count; i++)
@@ -92,12 +93,12 @@ namespace Monopoly.Service
             }
             else
             {
-                await dbRoom.DeleteRoomAsync(playerToRemove.RoomId);
+                await DeleteRoomAndPlayers(playerToRemove.RoomId);
                 return "Гравець покинув кімнату. Порожню кімнату було видалено";
             }
         }
 
-        private async Task<string?> ValidCreateRoomAsync(int maxNumberOfPlayers, string accountId)
+        private async Task<string?> ValidCreateRoomAsync(int maxNumberOfPlayers, string accountId)      
         {
             if (await dbPlayerInRoom.SearchPlayerInRoomWithIdAsync(accountId))
                 return "Неможливо створити кімнату. Гравець вже перебуває в кімнаті";
@@ -155,6 +156,13 @@ namespace Monopoly.Service
 
             await dbCells.InsertCellsAsync(cells);
             await dbPlayer.InsertPlayersAsync(players);
+        }
+        private async Task DeleteRoomAndPlayers(string roomId)
+        {
+            var deletePlayer = dbRoom.DeleteRoomAsync(roomId);
+            var deleteRoom = dbPlayerInRoom.DeleteAllPlayersInRoomAsync(roomId);
+
+            await Task.WhenAll(deletePlayer, deleteRoom);
         }
 
         private List<Cell> CreateCells(string gameId)

@@ -5,7 +5,7 @@ namespace Monopoly.Interfaces.IServices
 {
     public interface IGameService
     {
-        Task<GameStatus> StatusOfGameAsync(string gameId);
+        Task<GameReponse> StatusOfGameAsync(string gameId);
         Task<string> MoveAsync(string gameId, string playerName);
         Task<bool> TryPayAsync(string gameId, string playerName);
         Task<bool> TryBuyAsync(string gameId, string playerName);

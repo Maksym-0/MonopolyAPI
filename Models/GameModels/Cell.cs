@@ -62,24 +62,5 @@ namespace Monopoly.Models.GameModels
             }
             return true;
         }
-        public async Task<bool> CheckMonopoly()
-        {
-            int monopolyIndex = Constants.CellsMonopolyIndex[Number];
-            DBCells dbCells = new DBCells();
-            List<Cell> cells = await dbCells.ReadCellListAsync(GameId);
-
-            List<Cell> monopolyCells = new List<Cell>();
-            for(int i = 0; i < Constants.CellsMonopolyIndex.Count; i++) 
-            {
-                if (Constants.CellsMonopolyIndex[i] == monopolyIndex)
-                    monopolyCells.Add(cells[i]);
-            }
-            for (int i = 0; i < monopolyCells.Count; i++)
-            {
-                if (monopolyCells[i].Owner != Owner)
-                    return false;
-            }
-            return true;
-        }
     }
 }

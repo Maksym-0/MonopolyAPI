@@ -8,7 +8,7 @@ using System.Security.Claims;
 namespace Monopoly.Controllers
 {
     [ApiController]
-    [Route("api/[controller]/{gameId}")]
+    [Route("api/game/{gameId}")]
     [Authorize]
     public class GameController : ControllerBase
     {
@@ -24,8 +24,8 @@ namespace Monopoly.Controllers
         {
             try
             {
-                GameStatus game = await _gameService.StatusOfGameAsync(gameId);
-                ApiResponse<GameStatus> response = new ApiResponse<GameStatus>()
+                GameReponse game = await _gameService.StatusOfGameAsync(gameId);
+                ApiResponse<GameReponse> response = new ApiResponse<GameReponse>()
                 {
                     Success = true,
                     Message = "Отримано поточний стан гри",
@@ -101,7 +101,7 @@ namespace Monopoly.Controllers
             try
             {
                 await _gameService.LevelUpAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value, cellNumber);
-                ApiResponse<string> response = new ApiResponse<string>()
+                ApiResponse<object> response = new ApiResponse<object>()
                 {
                     Success = true,
                     Message = "Збільшення рівня клітини завершено",
@@ -120,7 +120,7 @@ namespace Monopoly.Controllers
             try
             {
                 await _gameService.LevelDownAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value, cellNumber);
-                ApiResponse<string> response = new ApiResponse<string>()
+                ApiResponse<object> response = new ApiResponse<object>()
                 {
                     Success = true,
                     Message = "Зменшення рівня клітини завершено",
@@ -174,7 +174,7 @@ namespace Monopoly.Controllers
 
         private IActionResult CatchBadRequest(Exception ex)
         {
-            ApiResponse<List<RoomResponse>> response = new ApiResponse<List<RoomResponse>>()
+            ApiResponse<object> response = new ApiResponse<object>()
             {
                 Success = false,
                 Message = ex.Message,

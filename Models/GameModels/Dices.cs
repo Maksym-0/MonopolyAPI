@@ -19,5 +19,12 @@
                 Dubl = false;
             DiceSum = Dice1 + Dice2;
         }
+        public Dice(int dice1, int dice2)
+        {
+            Dice1 = dice1;
+            Dice2 = dice2;
+            Dubl = (dice1 == dice2);
+            DiceSum = dice1 + dice2;
+        }
     }
 }

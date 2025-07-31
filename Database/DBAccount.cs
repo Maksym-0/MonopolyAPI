@@ -10,7 +10,7 @@ namespace Monopoly.Database
         
         public async Task InsertAccountAsync(Account acc)
         {
-            var sql = $"INSERT INTO PUBLIC.\"{Constants.DBaccountName}\" (\"Id\", \"Name\", \"Password\")" +
+            var sql = $"INSERT INTO PUBLIC.\"{Constants.DBaccountName}\" (\"Id\", \"Name\", \"Password\") " +
                 "VALUES (@id, @name, @password)";
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
@@ -23,7 +23,7 @@ namespace Monopoly.Database
         public async Task<List<Account>> ReadAccountListAsync()
         {
             var sql = "SELECT \"Id\", \"Name\", \"Password\" " +
-                $"FROM public.\"{Constants.DBaccountName}\"";
+                $"FROM PUBLIC.\"{Constants.DBaccountName}\"";
 
             await _connection.OpenAsync();
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
@@ -44,7 +44,7 @@ namespace Monopoly.Database
         public async Task<Account> ReadAccountAsync(string id)
         {
             var sql = "SELECT \"Id\", \"Name\", \"Password\" " +
-                $"FROM public.\"{Constants.DBaccountName}\" " +
+                $"FROM PUBLIC.\"{Constants.DBaccountName}\" " +
                 $"WHERE \"Id\" = @id";
 
             await _connection.OpenAsync();
@@ -78,7 +78,7 @@ namespace Monopoly.Database
         }
         public async Task DeleteAccountAsync(Account acc)
         {
-            var sql = $"DELETE FROM public.\"{Constants.DBaccountName}\" " +
+            var sql = $"DELETE FROM PUBLIC.\"{Constants.DBaccountName}\" " +
                 "WHERE \"Id\" = @id";
 
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);

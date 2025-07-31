@@ -11,6 +11,7 @@ namespace Monopoly.Models.GameModels
         public int Location { get; set; }
         public int CantAction { get; set; }
         public int ReverseMove { get; set; }
+        public Dice LastDiceResult { get; set; }
         public bool IsPrisoner { get; set; }
         public bool InGame { get; set; }
         public bool NeedPay { get; set; }
@@ -26,6 +27,7 @@ namespace Monopoly.Models.GameModels
             Balance = 3000;
             Location = 0;
             ReverseMove = 0;
+            LastDiceResult = new Dice(0, 0);
             IsPrisoner = false;
             NeedPay = false;
             InGame = true;
@@ -43,6 +45,7 @@ namespace Monopoly.Models.GameModels
             Balance = 3000;
             Location = 0;
             ReverseMove = 0;
+            LastDiceResult = new Dice(0, 0);
             IsPrisoner = false;
             NeedPay = false;
             InGame = true;

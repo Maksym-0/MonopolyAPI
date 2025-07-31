@@ -3,14 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using Monopoly.Interfaces.IServices;
 using Monopoly.Models.ApiResponse;
 using Monopoly.Models.APIResponse;
-using Monopoly.Models.RoomModels;
-using System.Net;
+using Monopoly.Models.Request;
 using System.Security.Claims;
 
 namespace Monopoly.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/rooms")]
     [Authorize]
     public class RoomController : ControllerBase
     {
@@ -21,7 +20,7 @@ namespace Monopoly.Controllers
             _roomService = roomService;
         }
 
-        [HttpGet("rooms")]
+        [HttpGet]
         public async Task<IActionResult> GetRooms()
         {
             try
@@ -41,11 +40,11 @@ namespace Monopoly.Controllers
             }
         }
         [HttpPost("create")]
-        public async Task<IActionResult> CreateRoom(int maxNumberOfPlayers, string? password)
+        public async Task<IActionResult> CreateRoom([FromBody] CreateRoomRequest dto)
         {
             try
             {
-                RoomResponse room = await _roomService.CreateRoomAsync(maxNumberOfPlayers, password, User.FindFirst(ClaimTypes.NameIdentifier).Value, User.Identity.Name);
+                RoomResponse room = await _roomService.CreateRoomAsync(dto.MaxNumberOfPlayers, dto.Password, User.FindFirst(ClaimTypes.NameIdentifier).Value, User.Identity.Name);
                 ApiResponse<RoomResponse> response = new ApiResponse<RoomResponse>()
                 {
                     Success = true,
@@ -60,11 +59,11 @@ namespace Monopoly.Controllers
             }
         }
         [HttpPut("{roomId}/join")]
-        public async Task<IActionResult> JoinRoom(string roomId, string? password)
+        public async Task<IActionResult> JoinRoom([FromBody] JoinRoomRequest dto)
         {
             try
             {
-                RoomResponse room = await _roomService.JoinRoomAsync(roomId, password, User.FindFirst(ClaimTypes.NameIdentifier).Value, User.Identity.Name);
+                RoomResponse room = await _roomService.JoinRoomAsync(dto.RoomId, dto.Password, User.FindFirst(ClaimTypes.NameIdentifier).Value, User.Identity.Name);
                 string msg = "Ви зайшли до кімнати";
                 if (room.InGame)
                     msg = "Ви зайшли до кімнати. Гру розпочато";
