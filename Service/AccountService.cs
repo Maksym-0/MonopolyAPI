@@ -33,8 +33,8 @@ namespace Monopoly.Service
         }
         public async Task<string?> TryLoginAsync(string name, string password)
         {
-            if (await dbAccount.SearchUserWithNameAsync(name))
-                throw new Exception("Користувача із цим ім'ям вже зареєстровано");
+            if (!await dbAccount.SearchUserWithNameAsync(name))
+                throw new Exception("Користувача із цим ім'ям не знайдено");
             Account account = await dbAccount.ReadAccountAsync(name);
 
             if (password == account.Password)
