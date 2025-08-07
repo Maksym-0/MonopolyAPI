@@ -35,7 +35,7 @@ namespace Monopoly.Service
         {
             if (!await dbAccount.SearchUserWithNameAsync(name))
                 throw new Exception("Користувача із цим ім'ям не знайдено");
-            Account account = await dbAccount.ReadAccountAsync(name);
+            Account account = await dbAccount.ReadAccountWithNameAsync(name);
 
             if (password == account.Password)
             {

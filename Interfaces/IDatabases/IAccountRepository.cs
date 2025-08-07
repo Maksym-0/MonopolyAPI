@@ -8,7 +8,8 @@ namespace Monopoly.Interfaces.IDatabases
     {
         Task InsertAccountAsync(Account acc);
         Task<List<Account>> ReadAccountListAsync();
-        Task<Account> ReadAccountAsync(string name);
+        Task<Account> ReadAccountWithIdAsync(string name);
+        Task<Account> ReadAccountWithNameAsync(string name);
         Task UpdateAccountAsync(Account acc);
         Task DeleteAccountAsync(Account acc);
 

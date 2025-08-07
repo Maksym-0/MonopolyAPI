@@ -41,7 +41,7 @@ namespace Monopoly.Database
             await _connection.CloseAsync();
             return accounts;
         }
-        public async Task<Account> ReadAccountAsync(string id)
+        public async Task<Account> ReadAccountWithIdAsync(string id)
         {
             var sql = "SELECT \"Id\", \"Name\", \"Password\" " +
                 $"FROM PUBLIC.\"{Constants.DBaccountName}\" " +
@@ -53,6 +53,27 @@ namespace Monopoly.Database
 
             NpgsqlDataReader npgsqlData = await cmd.ExecuteReaderAsync();
             if (!await npgsqlData.ReadAsync())
+            {
+                await _connection.CloseAsync();
+                throw new Exception("Аккаунт не знайдено");
+            }
+            Account account = ConstructAccount(npgsqlData);
+
+            await _connection.CloseAsync();
+            return account;
+        }
+        public async Task<Account> ReadAccountWithNameAsync(string name)
+        {
+            var sql = $"SELECT \"Id\", \"Name\", \"Password\" " +
+                $"FROM PUBLIC.{Constants.DBaccountName} " +
+                $"WHERE \"Name\" = @name";
+
+            await _connection.OpenAsync();
+            NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
+            cmd.Parameters.AddWithValue("name", name);
+
+            NpgsqlDataReader npgsqlData = await cmd.ExecuteReaderAsync();
+            if(!await npgsqlData.ReadAsync())
             {
                 await _connection.CloseAsync();
                 throw new Exception("Аккаунт не знайдено");
@@ -92,7 +113,9 @@ namespace Monopoly.Database
 
         public async Task<bool> SearchUserWithNameAsync(string name)
         {
-            var sql = $"SELECT * FROM public.\"{Constants.DBaccountName}\" where \"Name\" = @name";
+            var sql = $"SELECT \"Id\", \"Name\", \"Password\" " +
+                $"FROM public.\"{Constants.DBaccountName}\" " +
+                $"WHERE \"Name\" = @name";
 
             using NpgsqlCommand cmd = new(sql, _connection);
             cmd.Parameters.AddWithValue("name", name);
@@ -106,7 +129,9 @@ namespace Monopoly.Database
         }
         public async Task<bool> SearchUserWithIdAsync(string id)
         {
-            var sql = $"SELECT * FROM public.\"{Constants.DBaccountName}\" where \"Id\" = @id";
+            var sql = $"SELECT \"Id\", \"Name\", \"Password\" " +
+                $"FROM public.\"{Constants.DBaccountName}\" " +
+                $"WHERE \"Id\" = @id";
 
             using NpgsqlCommand cmd = new(sql, _connection);
             cmd.Parameters.AddWithValue("id", id);
