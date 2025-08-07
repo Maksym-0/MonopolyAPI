@@ -6,7 +6,7 @@
         public static readonly string DBaccountName = Environment.GetEnvironmentVariable("DB_Account") ?? "AccountData";
         public static readonly string DBroomName = Environment.GetEnvironmentVariable("DB_Room") ?? "RoomData";
         public static readonly string DBplayerInRoomName = Environment.GetEnvironmentVariable("DB_PlayerinRoom") ?? "PlayerInRoomData";
-        public static readonly string DBcellName = Environment.GetEnvironmentVariable("DB_Game") ?? "GameData";
+        public static readonly string DBcellName = Environment.GetEnvironmentVariable("DB_Cell") ?? "CellData";
         public static readonly string DBplayerName = Environment.GetEnvironmentVariable("DB_Player") ?? "PlayerData";
         public static readonly string JwtKey = Environment.GetEnvironmentVariable("JWT_KEY") ?? "my_secret_key_1234567891011121314151617181920";
 

@@ -1,5 +1,4 @@
 ﻿using Monopoly.Models.RoomModels;
-using Npgsql;
 namespace Monopoly.Interfaces.IDatabases
 {
     public interface IPlayerInRoomRepository

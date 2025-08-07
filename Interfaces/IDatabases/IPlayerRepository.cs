@@ -1,6 +1,4 @@
 ﻿using Monopoly.Models.GameModels;
-using Npgsql;
-using System.Data.Common;
 
 namespace Monopoly.Interfaces.IDatabases
 {
