@@ -65,7 +65,7 @@ namespace Monopoly.Database
         public async Task<Account> ReadAccountWithNameAsync(string name)
         {
             var sql = $"SELECT \"Id\", \"Name\", \"Password\" " +
-                $"FROM PUBLIC.{Constants.DBaccountName} " +
+                $"FROM PUBLIC.\"{Constants.DBaccountName}\" " +
                 $"WHERE \"Name\" = @name";
 
             await _connection.OpenAsync();
