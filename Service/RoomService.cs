@@ -1,5 +1,4 @@
-﻿using Monopoly.Database;
-using Monopoly.Interfaces.IDatabases;
+﻿using Monopoly.Interfaces.IDatabases;
 using Monopoly.Interfaces.IServices;
 using Monopoly.Models.APIResponse;
 using Monopoly.Models.GameModels;

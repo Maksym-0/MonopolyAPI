@@ -6,12 +6,11 @@ namespace Monopoly.Database
 {
     public class DBPlayerInRoom : IPlayerInRoomRepository
     {
-        private readonly NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
-        
         public async Task InsertPlayerInRoomAsync(PlayerInRoom playerInRoom)
         {
             var sql = $"INSERT INTO PUBLIC.\"{Constants.DBplayerInRoomName}\" (\"RoomId\", \"Id\", \"Name\")" +
                 "VALUES (@roomId, @id, @name)";
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             AddWithValue(cmd, playerInRoom);
@@ -24,6 +23,7 @@ namespace Monopoly.Database
         {
             var sql = $"INSERT INTO PUBLIC.\"{Constants.DBplayerInRoomName}\" (\"RoomId\", \"Id\", \"Name\")" +
                 "VALUES (@roomId, @id, @name)";
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
             await _connection.OpenAsync();
             foreach(PlayerInRoom playerInRoom in playersInRoom)
@@ -39,6 +39,7 @@ namespace Monopoly.Database
         {
             var sql = $"SELECT \"RoomId\", \"Id\", \"Name\" " +
                 $"FROM public.\"{Constants.DBplayerInRoomName}\"";
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             List<PlayerInRoom> playersInRoom = new List<PlayerInRoom>();
@@ -58,6 +59,7 @@ namespace Monopoly.Database
             var sql = $"SELECT \"RoomId\", \"Id\", \"Name\" " +
                 $"FROM public.\"{Constants.DBplayerInRoomName}\" " +
                 $"WHERE \"RoomId\" = @roomId";
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             List<PlayerInRoom> playersInRoom = new List<PlayerInRoom>();
@@ -78,6 +80,7 @@ namespace Monopoly.Database
             var sql = $"SELECT \"RoomId\", \"Id\", \"Name\" " +
                 $"FROM public.\"{Constants.DBplayerInRoomName}\" " +
                 $"WHERE \"Id\" = @id";
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             cmd.Parameters.AddWithValue("id", playerId);
@@ -99,7 +102,7 @@ namespace Monopoly.Database
         {
             var sql = $"DELETE FROM public.\"{Constants.DBplayerInRoomName}\" " +
                 "WHERE \"RoomId\" = @roomId";
-
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             cmd.Parameters.AddWithValue("roomId", roomId);
@@ -112,7 +115,7 @@ namespace Monopoly.Database
         {
             var sql = $"DELETE FROM public.\"{Constants.DBplayerInRoomName}\" " +
                 "WHERE \"Id\" = @id";
-
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             cmd.Parameters.AddWithValue("id", playerId);
@@ -125,12 +128,12 @@ namespace Monopoly.Database
         public async Task<bool> SearchPlayerInRoomWithIdAsync(string playerId)
         {
             var sql = $"SELECT * FROM public.\"{Constants.DBplayerInRoomName}\" where \"Id\" = @id";
-
-            using NpgsqlCommand cmd = new(sql, _connection);
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
+            NpgsqlCommand cmd = new(sql, _connection);
             cmd.Parameters.AddWithValue("id", playerId);
 
             await _connection.OpenAsync();
-            using NpgsqlDataReader sqlData = await cmd.ExecuteReaderAsync();
+            NpgsqlDataReader sqlData = await cmd.ExecuteReaderAsync();
             bool data = await sqlData.ReadAsync();
             await _connection.CloseAsync();
 

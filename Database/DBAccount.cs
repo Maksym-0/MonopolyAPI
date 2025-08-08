@@ -6,12 +6,11 @@ namespace Monopoly.Database
 {
     public class DBAccount : IAccountRepository
     {
-        private readonly NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
-        
         public async Task InsertAccountAsync(Account acc)
         {
             var sql = $"INSERT INTO PUBLIC.\"{Constants.DBaccountName}\" (\"Id\", \"Name\", \"Password\") " +
                 "VALUES (@id, @name, @password)";
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             AddWithValue(cmd, acc);
@@ -24,10 +23,9 @@ namespace Monopoly.Database
         {
             var sql = "SELECT \"Id\", \"Name\", \"Password\" " +
                 $"FROM PUBLIC.\"{Constants.DBaccountName}\"";
-
-            await _connection.OpenAsync();
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
-
+            await _connection.OpenAsync();
             NpgsqlDataReader npgsqlData = await cmd.ExecuteReaderAsync();
 
             Account acc;
@@ -46,9 +44,9 @@ namespace Monopoly.Database
             var sql = "SELECT \"Id\", \"Name\", \"Password\" " +
                 $"FROM PUBLIC.\"{Constants.DBaccountName}\" " +
                 $"WHERE \"Id\" = @id";
-
-            await _connection.OpenAsync();
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
+            await _connection.OpenAsync();
             cmd.Parameters.AddWithValue("id", id);
 
             NpgsqlDataReader npgsqlData = await cmd.ExecuteReaderAsync();
@@ -67,9 +65,9 @@ namespace Monopoly.Database
             var sql = $"SELECT \"Id\", \"Name\", \"Password\" " +
                 $"FROM PUBLIC.\"{Constants.DBaccountName}\" " +
                 $"WHERE \"Name\" = @name";
-
-            await _connection.OpenAsync();
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
+            await _connection.OpenAsync();
             cmd.Parameters.AddWithValue("name", name);
 
             NpgsqlDataReader npgsqlData = await cmd.ExecuteReaderAsync();
@@ -88,7 +86,7 @@ namespace Monopoly.Database
             var sql = $"UPDATE PUBLIC.\"{Constants.DBaccountName}\" " +
                 "SET \"Name\" = @name, \"Password\" = @password " +
                 "WHERE \"Id\" = @id";
-
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             AddWithValue(cmd, acc);
@@ -101,7 +99,7 @@ namespace Monopoly.Database
         {
             var sql = $"DELETE FROM PUBLIC.\"{Constants.DBaccountName}\" " +
                 "WHERE \"Id\" = @id";
-
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             cmd.Parameters.AddWithValue("id", acc.Id);
@@ -116,12 +114,12 @@ namespace Monopoly.Database
             var sql = $"SELECT \"Id\", \"Name\", \"Password\" " +
                 $"FROM public.\"{Constants.DBaccountName}\" " +
                 $"WHERE \"Name\" = @name";
-
-            using NpgsqlCommand cmd = new(sql, _connection);
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
+            NpgsqlCommand cmd = new(sql, _connection);
             cmd.Parameters.AddWithValue("name", name);
 
             await _connection.OpenAsync();
-            using NpgsqlDataReader sqlData = await cmd.ExecuteReaderAsync();
+            NpgsqlDataReader sqlData = await cmd.ExecuteReaderAsync();
             bool data = await sqlData.ReadAsync();
             await _connection.CloseAsync();
 
@@ -132,12 +130,12 @@ namespace Monopoly.Database
             var sql = $"SELECT \"Id\", \"Name\", \"Password\" " +
                 $"FROM public.\"{Constants.DBaccountName}\" " +
                 $"WHERE \"Id\" = @id";
-
-            using NpgsqlCommand cmd = new(sql, _connection);
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
+            NpgsqlCommand cmd = new(sql, _connection);
             cmd.Parameters.AddWithValue("id", id);
 
             await _connection.OpenAsync();
-            using NpgsqlDataReader sqlData = await cmd.ExecuteReaderAsync();
+            NpgsqlDataReader sqlData = await cmd.ExecuteReaderAsync();
 
             bool data = await sqlData.ReadAsync();
             await _connection.CloseAsync();

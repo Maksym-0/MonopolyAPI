@@ -6,12 +6,11 @@ namespace Monopoly.Database
 {
     public class DBCells : ICellRepository
     {
-        private readonly NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
-        
         public async Task InsertCellsAsync(List<Cell> cells)
         {
             var sql = $"INSERT INTO PUBLIC.\"{Constants.DBcellName}\" (\"GameId\", \"Name\", \"Number\", \"Price\", \"Rent\", \"OwnerName\", \"Level\")" +
                 "VALUES (@gameId, @name, @number, @price, @rent, @ownerName, @level)";
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
             
             await _connection.OpenAsync();
@@ -31,6 +30,7 @@ namespace Monopoly.Database
             var sql = $"SELECT \"GameId\", \"Name\", \"Number\", \"Price\", \"Rent\", \"OwnerName\", \"Level\" " +
                 $"FROM public.\"{Constants.DBcellName}\" " +
                 $"WHERE \"GameId\" = @gameId";
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             cmd.Parameters.AddWithValue("gameId", gameId);
@@ -54,7 +54,8 @@ namespace Monopoly.Database
 
             var sql = $"SELECT \"GameId\", \"Name\", \"Number\", \"Price\", \"Rent\", \"OwnerName\", \"Level\" " +
                 $"FROM public.\"{Constants.DBcellName}\" " +
-                $"WHERE \"GameId\" = @gameId AND \"number\" = @Number";
+                $"WHERE \"GameId\" = @gameId AND \"Number\" = @number";
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             cmd.Parameters.AddWithValue("gameId", gameId);
@@ -79,6 +80,7 @@ namespace Monopoly.Database
             var sql = $"UPDATE PUBLIC.\"{Constants.DBcellName}\" " +
                 $"SET \"Name\" = @name, \"Price\" = @price, \"Rent\" = @rent, \"OwnerName\" = @ownerName, \"Level\" = @level " +
                 $"WHERE \"Number\" = @number AND \"GameId\" = @gameId";
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
             
             AddWithValue(cmd, cell);
@@ -91,6 +93,7 @@ namespace Monopoly.Database
         {
             var sql = $"DELETE FROM PUBLIC.\"{Constants.DBcellName}\" " +
                 $"WHERE \"GameId\" = @gameId";
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             cmd.Parameters.AddWithValue("gameId", gameId);

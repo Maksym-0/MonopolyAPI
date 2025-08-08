@@ -1,19 +1,16 @@
 ﻿using Npgsql;
 using Monopoly.Interfaces.IDatabases;
 using Monopoly.Models.GameModels;
-using System.Dynamic;
-using System.Data;
 
 namespace Monopoly.Database
 {
     public class DBPlayerStatus : IPlayerRepository
     {
-        private readonly NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
-        
         public async Task InsertPlayersAsync(List<Player> players)
         {
             var sql = $"INSERT INTO PUBLIC.\"{Constants.DBplayerName}\" (\"Id\", \"Name\", \"GameId\", \"Balance\", \"Location\", \"CantAction\", \"ReverseMove\", \"LastDice1\", \"LastDice2\", \"IsPrisoner\", \"InGame\", \"NeedPay\", \"HisAction\", \"CanMove\", \"CanBuyCell\", \"CanLevelUpCell\") " +
                 "VALUES (@id, @name, @gameId, @balance, @location, @cantAction, @reverseMove, @lastDice1, @lastDice2, @isPrisoner, @inGame, @needPay, @hisAction, @canMove, @canBuyCell, @canLevelUpCell)";
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             await _connection.OpenAsync();
@@ -31,6 +28,7 @@ namespace Monopoly.Database
             var sql = $"SELECT \"Id\", \"Name\", \"GameId\", \"Balance\", \"Location\", \"CantAction\", \"ReverseMove\", \"LastDice1\", \"LastDice2\", \"IsPrisoner\", \"InGame\", \"NeedPay\", \"HisAction\", \"CanMove\", \"CanBuyCell\", \"CanLevelUpCell\" " +
                 $"FROM public.\"{Constants.DBplayerName}\" " +
                 $"WHERE \"GameId\" = @gameId";
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             List<Player> players = new List<Player>();
@@ -54,6 +52,7 @@ namespace Monopoly.Database
             var sql = $"SELECT \"Id\", \"Name\", \"GameId\", \"Balance\", \"Location\", \"CantAction\", \"ReverseMove\", \"LastDice1\", \"LastDice2\", \"IsPrisoner\", \"InGame\", \"NeedPay\", \"HisAction\", \"CanMove\", \"CanBuyCell\", \"CanLevelUpCell\" " +
                 $"FROM public.\"{Constants.DBplayerName}\" " +
                 $"WHERE \"GameId\" = @gameId AND \"id\" = @Id";
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             cmd.Parameters.AddWithValue("gameId", gameId);
@@ -77,6 +76,7 @@ namespace Monopoly.Database
             var sql = $"UPDATE PUBLIC.\"{Constants.DBplayerName}\" " +
                 $"SET \"Balance\" = @balance, \"Location\" = @location, \"CantAction\" = @cantAction, \"LastDice1\" = @lastDice1, \"LastDice2\" = @lastDice2, \"IsPrisoner\" = @isPrisoner, \"InGame\" = @inGame, \"NeedPay\" = @needPay, \"HisAction\" = @hisAction, \"CanMove\" = @canMove, \"CanBuyCell\" = @canBuyCell, \"CanLevelUpCell\" = @canLevelUpCell, \"ReverseMove\" = @reverseMove " +
                 "WHERE \"GameId\" = @gameId AND \"Id\" = @id";
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             AddWithValue(cmd, player);
@@ -89,6 +89,7 @@ namespace Monopoly.Database
         {
             var sql = $"DELETE FROM PUBLIC.\"{Constants.DBplayerName}\" " +
                 "WHERE \"GameId\" = @gameId";
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             cmd.Parameters.AddWithValue("gameId", gameId);

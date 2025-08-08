@@ -6,11 +6,11 @@ namespace Monopoly.Database
 {
     public class DBRoom : IRoomRepository
     {
-        private readonly NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
         public async Task InsertRoomAsync(Room room)
         {
             var sql = $"INSERT INTO PUBLIC.\"{Constants.DBroomName}\" (\"RoomId\", \"MaxNumberOfPlayers\", \"CountOfPlayers\", \"Password\", \"InGame\")" +
                 "VALUES (@roomId, @maxNumberOfPlayers, @countOfPlayers, @password, @inGame)";
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             AddWithValue(cmd, room);
@@ -23,6 +23,7 @@ namespace Monopoly.Database
         {
             var sql = $"SELECT \"RoomId\", \"MaxNumberOfPlayers\", \"CountOfPlayers\", \"Password\", \"InGame\" " +
                 $"FROM public.\"{Constants.DBroomName}\"";
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             List<Room> rooms = new List<Room>();
@@ -42,6 +43,7 @@ namespace Monopoly.Database
             var sql = $"SELECT \"RoomId\", \"MaxNumberOfPlayers\", \"CountOfPlayers\", \"Password\", \"InGame\" " +
                 $"FROM public.\"{Constants.DBroomName}\" " +
                 $"WHERE \"RoomId\" = @roomId";
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             cmd.Parameters.AddWithValue("roomId", roomId);
@@ -64,6 +66,7 @@ namespace Monopoly.Database
             var sql = $"UPDATE public.\"{Constants.DBroomName}\" " +
                 "SET \"CountOfPlayers\" = @countOfPlayers, \"MaxNumberOfPlayers\" = @maxNumberOfPlayers, \"InGame\" = @inGame, \"Password\" = @password " +
                 $"WHERE \"RoomId\" = @roomId";
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             AddWithValue(cmd, room);
@@ -76,7 +79,7 @@ namespace Monopoly.Database
         {
             var sql = $"DELETE FROM public.\"{Constants.DBroomName}\" " +
                 "WHERE \"RoomId\" = @roomId";
-
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
             cmd.Parameters.AddWithValue("roomId", roomId);
@@ -88,13 +91,14 @@ namespace Monopoly.Database
 
         public async Task<bool> SearchRoomWithIdAsync(string roomId)
         {
-            var sql = $"SELECT * FROM public.\"{Constants.DBroomName}\" where \"RoomId\" = @roomId";
-
-            using NpgsqlCommand cmd = new(sql, _connection);
+            var sql = $"SELECT * FROM public.\"{Constants.DBroomName}\" " +
+                $"WHERE \"RoomId\" = @roomId";
+            NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
+            NpgsqlCommand cmd = new(sql, _connection);
             cmd.Parameters.AddWithValue("roomId", roomId);
 
             await _connection.OpenAsync();
-            using NpgsqlDataReader sqlData = await cmd.ExecuteReaderAsync();
+            NpgsqlDataReader sqlData = await cmd.ExecuteReaderAsync();
             bool data = await sqlData.ReadAsync();
             await _connection.CloseAsync();
 

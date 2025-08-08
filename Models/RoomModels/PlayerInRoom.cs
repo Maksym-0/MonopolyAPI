@@ -2,9 +2,9 @@
 {
     public class PlayerInRoom
     {
-        public string RoomId { get; }
-        public string Id { get; }
-        public string Name { get; }
+        public string RoomId { get; set; }
+        public string Id { get; set; }
+        public string Name { get; set; }
 
         public PlayerInRoom(string roomId, string id, string name)
         {
