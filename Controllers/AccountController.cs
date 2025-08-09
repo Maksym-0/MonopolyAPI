@@ -34,19 +34,25 @@ namespace Monopoly.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] AccountRequest dto)
         {
-            if (await _accountService.TryRegisterAsync(dto.Name, dto.Password))
+            try
+            {
+                await _accountService.TryRegisterAsync(dto.Name, dto.Password);
                 return Ok(new ApiResponse<object>()
                 {
                     Success = true,
                     Message = "Обліковий запис успішно створено",
                     Data = null
                 });
-            return BadRequest(new ApiResponse<object>()
+            }
+            catch(Exception ex)
             {
-                Success = false,
-                Message = "Помилка при реєстрації",
-                Data = null
-            });
+                return BadRequest(new ApiResponse<object>()
+                {
+                    Success = false,
+                    Message = ex.Message,
+                    Data = null
+                });
+            }
         }
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] AccountRequest dto)

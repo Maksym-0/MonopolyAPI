@@ -1,10 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using Monopoly.Database;
+﻿using Microsoft.IdentityModel.Tokens;
 using Monopoly.Interfaces.IDatabases;
 using Monopoly.Interfaces.IServices;
 using Monopoly.Models.AcountModels;
-using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -24,7 +21,7 @@ namespace Monopoly.Service
         public async Task<bool> TryRegisterAsync(string name, string password)
         {
             if (await dbAccount.SearchUserWithNameAsync(name))
-                return false;
+                throw new Exception("Акаунт із цим ім'ям вже зареєстровано");
 
             Account account = new Account(await GenerateIdAsync(12), name, password);
 
