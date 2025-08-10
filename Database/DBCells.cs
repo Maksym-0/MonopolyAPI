@@ -8,7 +8,7 @@ namespace Monopoly.Database
     {
         public async Task InsertCellsAsync(List<Cell> cells)
         {
-            var sql = $"INSERT INTO PUBLIC.\"{Constants.DBcellName}\" (\"GameId\", \"Name\", \"Number\", \"Price\", \"Rent\", \"Owner\", \"Level\")" +
+            var sql = $"INSERT INTO PUBLIC.\"{Constants.DBcellName}\" (\"GameId\", \"Unique\", \"Name\", \"Number\", \"Price\", \"Rent\", \"Owner\", \"Level\")" +
                 "VALUES (@gameId, @name, @number, @price, @rent, @owner, @level)";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
@@ -27,7 +27,7 @@ namespace Monopoly.Database
         {
             List<Cell> cells = new List<Cell>();
 
-            var sql = $"SELECT \"GameId\", \"Name\", \"Number\", \"Price\", \"Rent\", \"Owner\", \"Level\" " +
+            var sql = $"SELECT \"GameId\", \"Unique\", \"Name\", \"Number\", \"Price\", \"Rent\", \"Owner\", \"Level\" " +
                 $"FROM public.\"{Constants.DBcellName}\" " +
                 $"WHERE \"GameId\" = @gameId";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
@@ -52,7 +52,7 @@ namespace Monopoly.Database
         {
             List<Cell> cells = new List<Cell>();
 
-            var sql = $"SELECT \"GameId\", \"Name\", \"Number\", \"Price\", \"Rent\", \"Owner\", \"Level\" " +
+            var sql = $"SELECT \"GameId\", \"Unique\", \"Name\", \"Number\", \"Price\", \"Rent\", \"Owner\", \"Level\" " +
                 $"FROM public.\"{Constants.DBcellName}\" " +
                 $"WHERE \"GameId\" = @gameId AND \"Number\" = @number";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
@@ -78,7 +78,7 @@ namespace Monopoly.Database
         public async Task UpdateCellAsync(Cell cell)
         {
             var sql = $"UPDATE PUBLIC.\"{Constants.DBcellName}\" " +
-                $"SET \"Name\" = @name, \"Price\" = @price, \"Rent\" = @rent, \"Owner\" = @owner, \"Level\" = @level " +
+                $"SET \"Name\" = @name, \"Unique\" = @unique, \"Price\" = @price, \"Rent\" = @rent, \"Owner\" = @owner, \"Level\" = @level " +
                 $"WHERE \"Number\" = @number AND \"GameId\" = @gameId";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
@@ -115,12 +115,13 @@ namespace Monopoly.Database
                 cell = new Cell
                 {
                     GameId = npgsqlData.GetString(0),
-                    Name = npgsqlData.GetString(1),
-                    Number = npgsqlData.GetInt32(2),
-                    Price = npgsqlData.GetInt32(3),
-                    Rent = npgsqlData.GetInt32(4),
-                    Owner = npgsqlData.GetString(5),
-                    Level = npgsqlData.GetInt32(6),
+                    Unique = npgsqlData.GetBoolean(1),
+                    Name = npgsqlData.GetString(2),
+                    Number = npgsqlData.GetInt32(3),
+                    Price = npgsqlData.GetInt32(4),
+                    Rent = npgsqlData.GetInt32(5),
+                    Owner = npgsqlData.GetString(6),
+                    Level = npgsqlData.GetInt32(7),
                 };
             }
             return cell;
@@ -128,6 +129,7 @@ namespace Monopoly.Database
         private void AddWithValue(NpgsqlCommand cmd, Cell cell)
         {
             cmd.Parameters.AddWithValue("gameId", cell.GameId);
+            cmd.Parameters.AddWithValue("unique", cell.Unique);
             cmd.Parameters.AddWithValue("name", cell.Name);
             cmd.Parameters.AddWithValue("number", cell.Number);
             if (cell.Price == null) cmd.Parameters.AddWithValue("price", DBNull.Value);
