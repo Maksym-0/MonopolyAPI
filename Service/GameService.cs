@@ -161,10 +161,12 @@ namespace Monopoly.Service
             player.StopAction();
             player.InGame = false;
             await dbPlayer.UpdatePlayerAsync(player);
+            await dbPlayerInRoom.DeletePlayerInRoomAsync(playerId);
+
             var room = await dbRoom.ReadRoomAsync(gameId);
             room.CountOfPlayers -= 1;
             await dbRoom.UpdateRoomAsync(room);
-            await dbPlayerInRoom.DeletePlayerInRoomAsync(playerId);
+
             List<Cell> cells = await dbCells.ReadCellListAsync(gameId);
 
             for (int i = 0; i < cells.Count; i++)

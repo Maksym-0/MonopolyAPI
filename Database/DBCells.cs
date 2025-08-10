@@ -9,7 +9,7 @@ namespace Monopoly.Database
         public async Task InsertCellsAsync(List<Cell> cells)
         {
             var sql = $"INSERT INTO PUBLIC.\"{Constants.DBcellName}\" (\"GameId\", \"Unique\", \"Name\", \"Number\", \"Price\", \"Rent\", \"Owner\", \"Level\")" +
-                "VALUES (@gameId, @name, @number, @price, @rent, @owner, @level)";
+                "VALUES (@gameId, @unique, @name, @number, @price, @rent, @owner, @level)";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
             
