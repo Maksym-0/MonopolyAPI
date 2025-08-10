@@ -14,13 +14,16 @@ namespace Monopoly.Service
         private readonly IPlayerInRoomRepository dbPlayerInRoom;
         private readonly IPlayerRepository dbPlayer;
 
+        private readonly IGameService gameService;
+
         public RoomService(IRoomRepository roomRepository, ICellRepository cellRepository, 
-            IPlayerInRoomRepository playerInRoomRepository, IPlayerRepository playerRepository) 
+            IPlayerInRoomRepository playerInRoomRepository, IPlayerRepository playerRepository, IGameService gameService) 
         {
             dbRoom = roomRepository;
             dbCells = cellRepository;
             dbPlayerInRoom = playerInRoomRepository;
             dbPlayer = playerRepository;
+            this.gameService = gameService;
         }
 
         public async Task<List<RoomResponse>> GetAllRoomsAsync()
@@ -81,11 +84,16 @@ namespace Monopoly.Service
 
             PlayerInRoom playerToRemove = await dbPlayerInRoom.ReadPlayerInRoomAsync(accountId);
             Room room = await dbRoom.ReadRoomAsync(playerToRemove.RoomId);
-
+            
             await dbPlayerInRoom.DeletePlayerInRoomAsync(accountId);
             room.CountOfPlayers -= 1;
-                
-            if (room.CountOfPlayers > 0)
+
+            if (room.InGame)
+            {
+                string msg = await gameService.LeaveGameAsync(playerToRemove.RoomId, accountId);
+                return msg;
+            }
+            else if (room.CountOfPlayers > 0)
             {
                 await dbRoom.UpdateRoomAsync(room);
                 return "Гравець покинув кімнату";
