@@ -219,6 +219,8 @@ namespace Monopoly.Service
 
             if (!player.InGame)
                 return "Гравець поза грою";
+            else if (cell.Unique)
+                return "Неможливо придбати особливу клітину";
             else if (!player.CanBuyCell)
                 return "Гравець не може придбати клітину";
             else if (cell.Owner != null)
@@ -236,7 +238,7 @@ namespace Monopoly.Service
                 return "Гравець поза грою";
             else if (!player.CanLevelUpCell)
                 return "Гравець не може підняти рівень клітини";
-            if (Constants.SpecialCellNames.Contains(Constants.CellNames[cellNumber]))
+            else if (cell.Unique)
                 return "Неможливо змінити рівень особливої клітини";
             else if (!await CheckMonopoly(cell))
                 return "Відсутня монополія, підняти рівень клітини неможливо";
@@ -255,6 +257,8 @@ namespace Monopoly.Service
 
             if (!player.InGame)
                 return "Гравець поза грою";
+            else if(cell.Unique)
+                return "Неможливо знизити рівень особливої клітини";
             else if (!player.HisAction)
                 return "Гравець не може змінювати рівень клітин не в свій хід";
             else if (cell.Owner != playerId)
