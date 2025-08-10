@@ -119,8 +119,8 @@ namespace Monopoly.Database
                     Name = npgsqlData.GetString(2),
                     Number = npgsqlData.GetInt32(3),
                     Price = npgsqlData.IsDBNull(4) ? null : npgsqlData.GetInt32(4),
-                    Rent = npgsqlData.IsDBNull(5) ? null : npgsqlData.GetInt32(4),
-                    Owner = npgsqlData.IsDBNull(6) ? null : npgsqlData.GetString(4),
+                    Rent = npgsqlData.IsDBNull(5) ? null : npgsqlData.GetInt32(5),
+                    Owner = npgsqlData.IsDBNull(6) ? null : npgsqlData.GetString(6),
                     Level = npgsqlData.GetInt32(7),
                 };
             }
