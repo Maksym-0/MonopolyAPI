@@ -37,7 +37,6 @@ namespace Monopoly.Service
                 throw new Exception(isValid);
             
             Player player = await dbPlayer.ReadPlayerAsync(gameId, playerId);
-            List<Player> players = await dbPlayer.ReadPlayerListAsync(gameId);
             List<Cell> cells = await dbCells.ReadCellListAsync(gameId);
 
             Dice dice = new Dice();
@@ -185,9 +184,9 @@ namespace Monopoly.Service
             if (winner != null)
             {
                 await DeleteGameAndRoom(gameId);
-                return $"Гравець покинув гру. Переможець: {winner}";
+                return $"Гравець {player.Name} покинув гру. Переможець: {winner}";
             }
-            return "Гравець покинув гру";
+            return $"Гравець {player.Name} покинув гру";
         }
 
         private async Task<string?> ValidateMoveAsync(string gameId, string playerId)
@@ -293,6 +292,7 @@ namespace Monopoly.Service
         private async Task<string> CellEffectAsync(Player player, List<Cell> cells)
         {
             Cell cell = cells[player.Location];
+            string message;
 
             if (cell.Unique)
             {
@@ -300,58 +300,59 @@ namespace Monopoly.Service
                 {
                     case "Старт":
                         player.Balance += 300;
-                        await dbPlayer.UpdatePlayerAsync(player);
-                        return "Ви потрапили на клітину Старт. Отримали гроші";
+                        message = "Ви потрапили на клітину Старт. Отримали гроші";
+                        break;
                     case "В'язниця":
                         player.Location = 30;
-                        await dbPlayer.UpdatePlayerAsync(player);
-                        return "Ви потрапили на клітину В'язниця. Їдьте на відпочинок";
+                        message = "Ви потрапили на клітину В'язниця. Їдьте на відпочинок";
+                        break;
                     case "Казино":
                         int win = random.Next(-3, 4) * 100;
                         player.Balance += win;
-                        await dbPlayer.UpdatePlayerAsync(player);
-                        return $"Ви потрапили на клітину Казино. Ваш виграш: {win}";
+                        message = $"Ви потрапили на клітину Казино. Ваш виграш: {win}";
+                        break;
                     case "Відпочинок":
                         player.Location = 11;
                         player.CantAction = 3;
                         player.IsPrisoner = true;
-                        await dbPlayer.UpdatePlayerAsync(player);
-                        return "Ви потрапили на клітину Відпочинок. Ви потрапили до тюрми";
+                        message = "Ви потрапили на клітину Відпочинок. Ви потрапили до тюрми";
+                        break;
                     case "Мінус гроші":
                         int lose = random.Next(-3, 0) * 100;
                         player.Balance += lose;
-                        await dbPlayer.UpdatePlayerAsync(player);
-                        return $"Ви потрапили на клітину Мінус гроші. Ви втратили {lose}";
+                        message = $"Ви потрапили на клітину Мінус гроші. Ви втратили {lose}";
+                        break;
                     case "Плюс гроші":
                         int plus = random.Next(1, 4) * 100;
                         player.Balance += plus;
-                        await dbPlayer.UpdatePlayerAsync(player);
-                        return $"Ви потрапили на клітину Плюс гроші. Ви отримали {plus}";
+                        message = $"Ви потрапили на клітину Плюс гроші. Ви отримали {plus}";
+                        break;
                     case "Швидка допомога":
                         player.CantAction = 1;
-                        await dbPlayer.UpdatePlayerAsync(player);
-                        return "Ви потрапили на клітину Швидка допомога. Пропустіть один хід";
+                        message = "Ви потрапили на клітину Швидка допомога. Пропустіть один хід";
+                        break;
                     case "Зворотній хід":
                         player.ReverseMove = 1;
-                        await dbPlayer.UpdatePlayerAsync(player);
-                        return "Ви потрапили на клітину Зворотній хід. Наступний хід відбудеться у зворотньому напрямку";
+                        message = "Ви потрапили на клітину Зворотній хід. Наступний хід відбудеться у зворотньому напрямку";
+                        break;
                     default:
-                        await dbPlayer.UpdatePlayerAsync(player);
-                        return "Невідома особлива клітина";
+                        message = "Невідома особлива клітина";
+                        break;
                 }
             }
             else if (cell.Owner == null)
             {
                 player.CanBuyCell = true;
-                await dbPlayer.UpdatePlayerAsync(player);
-                return "Рух завершено. Клітину можна купити";
+                message = "Рух завершено. Клітину можна купити";
             }
             else
             {
                 player.NeedPay = true;
-                await dbPlayer.UpdatePlayerAsync(player);
-                return "Ви потрапили на територію чужої компанії. Необхідно сплатити рахунки";
+                message = "Ви потрапили на територію чужої компанії. Необхідно сплатити рахунки";
             }
+
+            await dbPlayer.UpdatePlayerAsync(player);
+            return message;
         }
         private async Task<string> ActionNextPlayer(string gameId, string oldPlayerId)
         {
