@@ -6,9 +6,9 @@ namespace Monopoly.Interfaces.IServices
 {
     public interface IRoomService
     {
-        Task<List<RoomResponse>> GetAllRoomsAsync();
-        Task<RoomResponse> CreateRoomAsync(int maxNumberOfPlayers, string? password, string accountId, string accountName);
-        Task<RoomResponse> JoinRoomAsync(string roomId, string? password, string accountId, string accountName);
+        Task<List<RoomDto>> GetAllRoomsAsync();
+        Task<RoomDto> CreateRoomAsync(int maxNumberOfPlayers, string? password, string accountId, string accountName);
+        Task<RoomDto> JoinRoomAsync(string roomId, string? password, string accountId, string accountName);
         Task<string> QuitRoomAsync(string accountId);
     }
 }

@@ -26,18 +26,18 @@ namespace Monopoly.Service
             this.gameService = gameService;
         }
 
-        public async Task<List<RoomResponse>> GetAllRoomsAsync()
+        public async Task<List<RoomDto>> GetAllRoomsAsync()
         {
             List<Room> rooms = await dbRoom.ReadRoomListAsync();
-            List<RoomResponse> roomResponces = new List<RoomResponse>();
+            List<RoomDto> roomResponces = new List<RoomDto>();
 
             if (rooms.Count == 0)
-                return new List<RoomResponse>();
+                return new List<RoomDto>();
             for (int i = 0; i < rooms.Count; i++)
-                roomResponces.Add(new RoomResponse(rooms[i], await dbPlayerInRoom.ReadPlayerInRoomListAsync(rooms[i].RoomId)));
+                roomResponces.Add(new RoomDto(rooms[i], await dbPlayerInRoom.ReadPlayerInRoomListAsync(rooms[i].RoomId)));
             return roomResponces;
         }
-        public async Task<RoomResponse> CreateRoomAsync(int maxNumberOfPlayers, string? password, string accountId, string accountName)
+        public async Task<RoomDto> CreateRoomAsync(int maxNumberOfPlayers, string? password, string accountId, string accountName)
         {
             string? isValid = await ValidCreateRoomAsync(maxNumberOfPlayers, accountId);
             if (isValid != null)
@@ -57,9 +57,9 @@ namespace Monopoly.Service
             await dbRoom.InsertRoomAsync(room);
             await dbPlayerInRoom.InsertPlayerInRoomListAsync(basicPlayers);
 
-            return new RoomResponse(room, basicPlayers);
+            return new RoomDto(room, basicPlayers);
         }
-        public async Task<RoomResponse> JoinRoomAsync(string roomId, string? password, string accountId, string accountName)
+        public async Task<RoomDto> JoinRoomAsync(string roomId, string? password, string accountId, string accountName)
         {
             string? isValid = await ValidJoinRoomAsync(roomId, password, accountId);
             if (isValid != null)
@@ -74,7 +74,7 @@ namespace Monopoly.Service
                 await StartGameInRoom(room);
             else
                 await dbRoom.UpdateRoomAsync(room);
-            return new RoomResponse(room, await dbPlayerInRoom.ReadPlayerInRoomListAsync(roomId));
+            return new RoomDto(room, await dbPlayerInRoom.ReadPlayerInRoomListAsync(roomId));
         }
         public async Task<string> QuitRoomAsync(string accountId)
         {
@@ -90,8 +90,10 @@ namespace Monopoly.Service
 
             if (room.InGame)
             {
-                string msg = await gameService.LeaveGameAsync(playerToRemove.RoomId, accountId);
-                return msg;
+                var leaveGameDto = await gameService.LeaveGameAsync(playerToRemove.RoomId, accountId);
+                if(leaveGameDto.IsGameOver)
+                    return $"Гравець {leaveGameDto.PlayerName} покинув гру. Переможець {leaveGameDto.Winner.Name}";
+                return $"Гравець {leaveGameDto.PlayerName} покинув гру. В грі залишилось {leaveGameDto.RemainingPlayers}";
             }
             else if (room.CountOfPlayers > 0)
             {
@@ -184,7 +186,7 @@ namespace Monopoly.Service
                 }
                 else
                 {
-                    cell = new Cell(gameId, Constants.CellNames[i], i, Constants.CellPrices[i], Constants.CellStartRents[i]);
+                    cell = new Cell(gameId, Constants.CellsMonopolyIndex[i], Constants.CellsMonopolyTypes[Constants.CellsMonopolyIndex[i]], Constants.CellNames[i], i, Constants.CellPrices[i], Constants.CellStartRents[i]);
                 }
                 cells.Add(cell);
             }

@@ -6,7 +6,7 @@ namespace Monopoly.Interfaces.IDatabases
     {
         Task InsertPlayersAsync(List<Player> players);
         Task<List<Player>> ReadPlayerListAsync(string gameId);
-        Task<Player> ReadPlayerAsync(string gameId, string name);
+        Task<Player> ReadPlayerAsync(string gameId, string playerId);
         Task UpdatePlayerAsync(Player player);
         Task DeletePlayersAsync(string gameId);
     }

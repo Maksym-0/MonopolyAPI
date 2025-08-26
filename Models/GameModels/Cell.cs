@@ -1,16 +1,17 @@
-﻿using Monopoly.Database;
-
-namespace Monopoly.Models.GameModels
+﻿namespace Monopoly.Models.GameModels
 {
     public class Cell
     {
         public string GameId { get; set; }
+        public int? MonopolyIndex { get; set; }
+        public string? MonopolyType { get; set; }
         public bool Unique { get; set; }
+        public bool? IsMonopoly { get; set; }
         public string Name { get; set; }
         public int Number { get; set; }
         public int? Price { get; set; }
         public int? Rent { get; set; }
-        public string? Owner { get; set; }
+        public string? OwnerId { get; set; }
         public int Level { get; set; }
         public Cell(string gameId, string name, int number)
         {
@@ -19,15 +20,18 @@ namespace Monopoly.Models.GameModels
             Name = name;
             Number = number;
         }
-        public Cell(string gameId, string name, int number, int price, int rent)
+        public Cell(string gameId, int? monopolyIndex, string? monopolyType, string name, int number, int price, int rent)
         {
             Unique = false;
             GameId = gameId;
+            MonopolyIndex = monopolyIndex;
+            MonopolyType = monopolyType;
+            IsMonopoly = false;
             Name = name;
             Number = number;
             Price = price;
             Rent = rent;
-            Owner = null;
+            OwnerId = null;
             Level = 0;
         }
         public Cell() { }

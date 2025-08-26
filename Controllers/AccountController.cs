@@ -20,15 +20,16 @@ namespace Monopoly.Controllers
         [HttpGet("me")]
         public IActionResult GetMyData()
         {
+            AccountDto account = new AccountDto()
+            {
+                Id = User.FindFirst(ClaimTypes.NameIdentifier).Value,
+                Name = User.Identity.Name
+            };
             return Ok(new ApiResponse<object>()
             {
                 Success = true,
                 Message = "Дані користувача",
-                Data = new
-                {
-                    Id = User.FindFirst(ClaimTypes.NameIdentifier).Value,
-                    Name = User.Identity.Name
-                }
+                Data = account
             });
         }
         [HttpPost("register")]

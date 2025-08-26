@@ -25,8 +25,8 @@ namespace Monopoly.Controllers
         {
             try
             {
-                List<RoomResponse> rooms = await _roomService.GetAllRoomsAsync();
-                ApiResponse<List<RoomResponse>> response = new ApiResponse<List<RoomResponse>>()
+                List<RoomDto> rooms = await _roomService.GetAllRoomsAsync();
+                ApiResponse<List<RoomDto>> response = new ApiResponse<List<RoomDto>>()
                 {
                     Success = true,
                     Message = "Отримано список кімнат",
@@ -44,8 +44,8 @@ namespace Monopoly.Controllers
         {
             try
             {
-                RoomResponse room = await _roomService.CreateRoomAsync(dto.MaxNumberOfPlayers, dto.Password, User.FindFirst(ClaimTypes.NameIdentifier).Value, User.Identity.Name);
-                ApiResponse<RoomResponse> response = new ApiResponse<RoomResponse>()
+                RoomDto room = await _roomService.CreateRoomAsync(dto.MaxNumberOfPlayers, dto.Password, User.FindFirst(ClaimTypes.NameIdentifier).Value, User.Identity.Name);
+                ApiResponse<RoomDto> response = new ApiResponse<RoomDto>()
                 {
                     Success = true,
                     Message = "Кімнату успішно створено",
@@ -63,11 +63,11 @@ namespace Monopoly.Controllers
         {
             try
             {
-                RoomResponse room = await _roomService.JoinRoomAsync(dto.RoomId, dto.Password, User.FindFirst(ClaimTypes.NameIdentifier).Value, User.Identity.Name);
+                RoomDto room = await _roomService.JoinRoomAsync(dto.RoomId, dto.Password, User.FindFirst(ClaimTypes.NameIdentifier).Value, User.Identity.Name);
                 string msg = "Ви зайшли до кімнати";
                 if (room.InGame)
                     msg = "Ви зайшли до кімнати. Гру розпочато";
-                ApiResponse<RoomResponse> response = new ApiResponse<RoomResponse>()
+                ApiResponse<RoomDto> response = new ApiResponse<RoomDto>()
                 {
                     Success = true,
                     Message = msg,
@@ -86,7 +86,7 @@ namespace Monopoly.Controllers
             try
             {
                 string msg = await _roomService.QuitRoomAsync(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-                ApiResponse<RoomResponse> response = new ApiResponse<RoomResponse>()
+                ApiResponse<RoomDto> response = new ApiResponse<RoomDto>()
                 {
                     Success = true,
                     Message = msg,
@@ -102,7 +102,7 @@ namespace Monopoly.Controllers
 
         private IActionResult CatchBadRequest(Exception ex)
         {
-            ApiResponse<List<RoomResponse>> response = new ApiResponse<List<RoomResponse>>()
+            ApiResponse<List<RoomDto>> response = new ApiResponse<List<RoomDto>>()
             {
                 Success = false,
                 Message = ex.Message,

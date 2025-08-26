@@ -8,8 +8,8 @@ namespace Monopoly.Database
     {
         public async Task InsertCellsAsync(List<Cell> cells)
         {
-            var sql = $"INSERT INTO PUBLIC.\"{Constants.DBcellName}\" (\"GameId\", \"Unique\", \"Name\", \"Number\", \"Price\", \"Rent\", \"Owner\", \"Level\")" +
-                "VALUES (@gameId, @unique, @name, @number, @price, @rent, @owner, @level)";
+            var sql = $"INSERT INTO PUBLIC.\"{Constants.DBcellName}\" (\"GameId\", \"MonopolyIndex\", \"MonopolyType\", \"Unique\", \"IsMonopoly\", \"Name\", \"Number\", \"Price\", \"Rent\", \"OwnerId\", \"Level\")" +
+                "VALUES (@gameId, @monopolyIndex, @monopolyType, @unique, @isMonopoly, @name, @number, @price, @rent, @ownerId, @level)";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
             
@@ -27,7 +27,7 @@ namespace Monopoly.Database
         {
             List<Cell> cells = new List<Cell>();
 
-            var sql = $"SELECT \"GameId\", \"Unique\", \"Name\", \"Number\", \"Price\", \"Rent\", \"Owner\", \"Level\" " +
+            var sql = $"SELECT \"GameId\", \"MonopolyIndex\", \"MonopolyType\", \"Unique\", \"IsMonopoly\", \"Name\", \"Number\", \"Price\", \"Rent\", \"OwnerId\", \"Level\" " +
                 $"FROM public.\"{Constants.DBcellName}\" " +
                 $"WHERE \"GameId\" = @gameId";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
@@ -52,7 +52,7 @@ namespace Monopoly.Database
         {
             List<Cell> cells = new List<Cell>();
 
-            var sql = $"SELECT \"GameId\", \"Unique\", \"Name\", \"Number\", \"Price\", \"Rent\", \"Owner\", \"Level\" " +
+            var sql = $"SELECT \"GameId\", \"MonopolyIndex\", \"MonopolyType\", \"Unique\", \"IsMonopoly\", \"Name\", \"Number\", \"Price\", \"Rent\", \"OwnerId\", \"Level\" " +
                 $"FROM public.\"{Constants.DBcellName}\" " +
                 $"WHERE \"GameId\" = @gameId AND \"Number\" = @number";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
@@ -78,7 +78,7 @@ namespace Monopoly.Database
         public async Task UpdateCellAsync(Cell cell)
         {
             var sql = $"UPDATE PUBLIC.\"{Constants.DBcellName}\" " +
-                $"SET \"Name\" = @name, \"Unique\" = @unique, \"Price\" = @price, \"Rent\" = @rent, \"Owner\" = @owner, \"Level\" = @level " +
+                $"SET \"IsMonopoly\" = @isMonopoly, \"Name\" = @name, \"Unique\" = @unique, \"Price\" = @price, \"Rent\" = @rent, \"OwnerId\" = @ownerId, \"Level\" = @level " +
                 $"WHERE \"Number\" = @number AND \"GameId\" = @gameId";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
@@ -106,22 +106,25 @@ namespace Monopoly.Database
         private Cell ConstructCell(NpgsqlDataReader npgsqlData)
         {
             Cell cell;
-            if (npgsqlData.IsDBNull(3))
+            if (npgsqlData.GetBoolean(3))
             {
-                cell = new Cell(npgsqlData.GetString(0), npgsqlData.GetString(1), npgsqlData.GetInt32(2));
+                cell = new Cell(npgsqlData.GetString(0), npgsqlData.GetString(5), npgsqlData.GetInt32(6));
             }
             else
             {
                 cell = new Cell
                 {
                     GameId = npgsqlData.GetString(0),
-                    Unique = npgsqlData.GetBoolean(1),
-                    Name = npgsqlData.GetString(2),
-                    Number = npgsqlData.GetInt32(3),
-                    Price = npgsqlData.IsDBNull(4) ? null : npgsqlData.GetInt32(4),
-                    Rent = npgsqlData.IsDBNull(5) ? null : npgsqlData.GetInt32(5),
-                    Owner = npgsqlData.IsDBNull(6) ? null : npgsqlData.GetString(6),
-                    Level = npgsqlData.GetInt32(7),
+                    MonopolyIndex = npgsqlData.IsDBNull(1) ? null : npgsqlData.GetInt32(1),
+                    MonopolyType = npgsqlData.IsDBNull(2) ? null : npgsqlData.GetString(2),
+                    Unique = npgsqlData.GetBoolean(3),
+                    IsMonopoly = npgsqlData.IsDBNull(4) ? null : npgsqlData.GetBoolean(4),
+                    Name = npgsqlData.GetString(5),
+                    Number = npgsqlData.GetInt32(6),
+                    Price = npgsqlData.IsDBNull(7) ? null : npgsqlData.GetInt32(7),
+                    Rent = npgsqlData.IsDBNull(8) ? null : npgsqlData.GetInt32(8),
+                    OwnerId = npgsqlData.IsDBNull(9) ? null : npgsqlData.GetString(9),
+                    Level = npgsqlData.GetInt32(10),
                 };
             }
             return cell;
@@ -129,15 +132,21 @@ namespace Monopoly.Database
         private void AddWithValue(NpgsqlCommand cmd, Cell cell)
         {
             cmd.Parameters.AddWithValue("gameId", cell.GameId);
+            if (cell.MonopolyIndex == null ) cmd.Parameters.AddWithValue("monopolyIndex", DBNull.Value);
+            else cmd.Parameters.AddWithValue("monopolyIndex", cell.MonopolyIndex);
+            if (cell.MonopolyType == null) cmd.Parameters.AddWithValue("monopolyType", DBNull.Value);
+            else cmd.Parameters.AddWithValue("monopolyType", cell.MonopolyType);
             cmd.Parameters.AddWithValue("unique", cell.Unique);
+            if (cell.IsMonopoly == null) cmd.Parameters.AddWithValue("isMonopoly", DBNull.Value);
+            else cmd.Parameters.AddWithValue("isMonopoly", cell.IsMonopoly);
             cmd.Parameters.AddWithValue("name", cell.Name);
             cmd.Parameters.AddWithValue("number", cell.Number);
             if (cell.Price == null) cmd.Parameters.AddWithValue("price", DBNull.Value);
             else cmd.Parameters.AddWithValue("price", cell.Price);
             if (cell.Rent == null) cmd.Parameters.AddWithValue("rent", DBNull.Value);
             else cmd.Parameters.AddWithValue("rent", cell.Rent);
-            if (cell.Owner == null) cmd.Parameters.AddWithValue("owner", DBNull.Value);
-            else cmd.Parameters.AddWithValue("owner", cell.Owner);
+            if (cell.OwnerId == null) cmd.Parameters.AddWithValue("ownerId", DBNull.Value);
+            else cmd.Parameters.AddWithValue("ownerId", cell.OwnerId);
             cmd.Parameters.AddWithValue("level", cell.Level);
         }
     }

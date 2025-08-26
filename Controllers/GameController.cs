@@ -24,8 +24,8 @@ namespace Monopoly.Controllers
         {
             try
             {
-                GameReponse game = await _gameService.StatusOfGameAsync(gameId);
-                ApiResponse<GameReponse> response = new ApiResponse<GameReponse>()
+                GameDto game = await _gameService.StatusOfGameAsync(gameId);
+                ApiResponse<GameDto> response = new ApiResponse<GameDto>()
                 {
                     Success = true,
                     Message = "Отримано поточний стан гри",
@@ -43,8 +43,8 @@ namespace Monopoly.Controllers
         {
             try
             {
-                string moveResult = await _gameService.MoveAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value);
-                ApiResponse<string> response = new ApiResponse<string>()
+                var moveResult = await _gameService.MoveAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value);
+                ApiResponse<MoveDto> response = new ApiResponse<MoveDto>()
                 {
                     Success = true,
                     Message = "Бросок кубиків та відповідний рух завершено",
@@ -62,8 +62,8 @@ namespace Monopoly.Controllers
         {
             try
             {
-                bool payResult = await _gameService.TryPayAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value);
-                ApiResponse<bool> response = new ApiResponse<bool>()
+                var payResult = await _gameService.TryPayAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value);
+                ApiResponse<PayDto> response = new ApiResponse<PayDto>()
                 {
                     Success = true,
                     Message = "Сплату рахунків завершено",
@@ -81,8 +81,8 @@ namespace Monopoly.Controllers
         {
             try
             {
-                bool buyResult = await _gameService.TryBuyAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value);
-                ApiResponse<bool> response = new ApiResponse<bool>()
+                var buyResult = await _gameService.TryBuyAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value);
+                ApiResponse<BuyDto> response = new ApiResponse<BuyDto>()
                 {
                     Success = true,
                     Message = "Придбання клітини завершено",
@@ -100,12 +100,12 @@ namespace Monopoly.Controllers
         {
             try
             {
-                await _gameService.LevelUpAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value, cellNumber);
-                ApiResponse<object> response = new ApiResponse<object>()
+                var levelUpResult = await _gameService.LevelUpAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value, cellNumber);
+                ApiResponse<LevelChangeDto> response = new ApiResponse<LevelChangeDto>()
                 {
                     Success = true,
                     Message = "Збільшення рівня клітини завершено",
-                    Data = null
+                    Data = levelUpResult
                 };
                 return Ok(response);
             }
@@ -119,12 +119,12 @@ namespace Monopoly.Controllers
         {
             try
             {
-                await _gameService.LevelDownAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value, cellNumber);
-                ApiResponse<object> response = new ApiResponse<object>()
+                var levelDownResult = await _gameService.LevelDownAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value, cellNumber);
+                ApiResponse<LevelChangeDto> response = new ApiResponse<LevelChangeDto>()
                 {
                     Success = true,
                     Message = "Зменшення рівня клітини завершено",
-                    Data = null
+                    Data = levelDownResult
                 };
                 return Ok(response);
             }
@@ -138,8 +138,8 @@ namespace Monopoly.Controllers
         {
             try
             {
-                string status = await _gameService.EndActionAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value);
-                ApiResponse<string> response = new ApiResponse<string>()
+                var status = await _gameService.EndActionAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value);
+                ApiResponse<NextActionDto> response = new ApiResponse<NextActionDto>()
                 {
                     Success = true,
                     Message = "Дію завершено",
@@ -157,8 +157,8 @@ namespace Monopoly.Controllers
         {
             try
             {
-                string status = await _gameService.LeaveGameAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value);
-                ApiResponse<string> response = new ApiResponse<string>()
+                var status = await _gameService.LeaveGameAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value);
+                ApiResponse<LeaveGameDto> response = new ApiResponse<LeaveGameDto>()
                 {
                     Success = true,
                     Message = "Гру покинуто",

@@ -84,11 +84,12 @@ namespace Monopoly.Models.GameModels
             }
             else return false;
         }
-        public bool PayRent(int payment)
+        public bool PayRent(Player receiver, int payment)
         {
             if (Balance >= payment)
             {
                 Balance -= payment;
+                receiver.Balance += payment;
                 NeedPay = false;
                 return true;
             }
@@ -104,13 +105,13 @@ namespace Monopoly.Models.GameModels
             }
             else return false;
         }
-        public bool PayToLeavePrison()
+        public bool PayToLeavePrison(int leavePrisonCost)
         {
-            if (PayRent(300)) 
+            if (PayRent(leavePrisonCost))
             {
                 IsPrisoner = false;
                 CantAction = 0;
-                return true; 
+                return true;
             }
             else return false;
         }
