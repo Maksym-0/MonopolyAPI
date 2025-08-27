@@ -107,8 +107,9 @@ namespace Monopoly.Models.GameModels
         }
         public bool PayToLeavePrison(int leavePrisonCost)
         {
-            if (PayRent(leavePrisonCost))
+            if (Balance >= leavePrisonCost)
             {
+                Balance -= leavePrisonCost;
                 IsPrisoner = false;
                 CantAction = 0;
                 return true;
