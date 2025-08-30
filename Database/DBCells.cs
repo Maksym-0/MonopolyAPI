@@ -4,7 +4,7 @@ using Monopoly.Models.GameModels;
 
 namespace Monopoly.Database
 {
-    public class DBCells : ICellRepository
+    public class DbCells : ICellRepository
     {
         public async Task InsertCellsAsync(List<Cell> cells)
         {

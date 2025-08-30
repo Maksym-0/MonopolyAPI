@@ -32,10 +32,10 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 
-builder.Services.AddScoped<IAccountRepository, DBAccount>();
-builder.Services.AddScoped<ICellRepository, DBCells>();
-builder.Services.AddScoped<IPlayerInRoomRepository, DBPlayerInRoom>();
-builder.Services.AddScoped<IPlayerRepository, DBPlayerStatus>();
+builder.Services.AddScoped<IAccountRepository, DbAccount>();
+builder.Services.AddScoped<ICellRepository, DbCells>();
+builder.Services.AddScoped<IPlayerInRoomRepository, DbPlayerInRoom>();
+builder.Services.AddScoped<IPlayerRepository, DbPlayer>();
 builder.Services.AddScoped<IRoomRepository, DBRoom>();
 
 builder.Services.AddScoped<IAccountService, AccountService>();

@@ -4,12 +4,12 @@ using Monopoly.Models.GameModels;
 
 namespace Monopoly.Database
 {
-    public class DBPlayerStatus : IPlayerRepository
+    public class DbPlayer : IPlayerRepository
     {
         public async Task InsertPlayersAsync(List<Player> players)
         {
-            var sql = $"INSERT INTO PUBLIC.\"{Constants.DBplayerName}\" (\"Id\", \"Name\", \"GameId\", \"Balance\", \"Location\", \"CantAction\", \"ReverseMove\", \"LastDice1\", \"LastDice2\", \"IsPrisoner\", \"InGame\", \"NeedPay\", \"HisAction\", \"CanMove\", \"CanBuyCell\", \"CanLevelUpCell\") " +
-                "VALUES (@id, @name, @gameId, @balance, @location, @cantAction, @reverseMove, @lastDice1, @lastDice2, @isPrisoner, @inGame, @needPay, @hisAction, @canMove, @canBuyCell, @canLevelUpCell)";
+            var sql = $"INSERT INTO PUBLIC.\"{Constants.DBplayerName}\" (\"Id\", \"Name\", \"GameId\", \"Balance\", \"Location\", \"CantAction\", \"ReverseMove\", \"LastDice1\", \"LastDice2\", \"CountOfDubles\", \"IsPrisoner\", \"InGame\", \"NeedPay\", \"HisAction\", \"CanMove\", \"CanBuyCell\", \"CanLevelUpCell\") " +
+                "VALUES (@id, @name, @gameId, @balance, @location, @cantAction, @reverseMove, @lastDice1, @lastDice2, @countOfDubles, @isPrisoner, @inGame, @needPay, @hisAction, @canMove, @canBuyCell, @canLevelUpCell)";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 
@@ -25,7 +25,7 @@ namespace Monopoly.Database
         }
         public async Task<List<Player>> ReadPlayerListAsync(string gameId)
         {
-            var sql = $"SELECT \"Id\", \"Name\", \"GameId\", \"Balance\", \"Location\", \"CantAction\", \"ReverseMove\", \"LastDice1\", \"LastDice2\", \"IsPrisoner\", \"InGame\", \"NeedPay\", \"HisAction\", \"CanMove\", \"CanBuyCell\", \"CanLevelUpCell\" " +
+            var sql = $"SELECT \"Id\", \"Name\", \"GameId\", \"Balance\", \"Location\", \"CantAction\", \"ReverseMove\", \"LastDice1\", \"LastDice2\", \"CountOfDubles\", \"IsPrisoner\", \"InGame\", \"NeedPay\", \"HisAction\", \"CanMove\", \"CanBuyCell\", \"CanLevelUpCell\" " +
                 $"FROM public.\"{Constants.DBplayerName}\" " +
                 $"WHERE \"GameId\" = @gameId";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
@@ -49,7 +49,7 @@ namespace Monopoly.Database
         }
         public async Task<Player> ReadPlayerAsync(string gameId, string playerId)
         {
-            var sql = $"SELECT \"Id\", \"Name\", \"GameId\", \"Balance\", \"Location\", \"CantAction\", \"ReverseMove\", \"LastDice1\", \"LastDice2\", \"IsPrisoner\", \"InGame\", \"NeedPay\", \"HisAction\", \"CanMove\", \"CanBuyCell\", \"CanLevelUpCell\" " +
+            var sql = $"SELECT \"Id\", \"Name\", \"GameId\", \"Balance\", \"Location\", \"CantAction\", \"ReverseMove\", \"LastDice1\", \"LastDice2\", \"CountOfDubles\", \"IsPrisoner\", \"InGame\", \"NeedPay\", \"HisAction\", \"CanMove\", \"CanBuyCell\", \"CanLevelUpCell\" " +
                 $"FROM public.\"{Constants.DBplayerName}\" " +
                 $"WHERE \"GameId\" = @gameId AND \"Id\" = @id";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
@@ -74,7 +74,7 @@ namespace Monopoly.Database
         public async Task UpdatePlayerAsync(Player player)
         {
             var sql = $"UPDATE PUBLIC.\"{Constants.DBplayerName}\" " +
-                $"SET \"Balance\" = @balance, \"Location\" = @location, \"CantAction\" = @cantAction, \"LastDice1\" = @lastDice1, \"LastDice2\" = @lastDice2, \"IsPrisoner\" = @isPrisoner, \"InGame\" = @inGame, \"NeedPay\" = @needPay, \"HisAction\" = @hisAction, \"CanMove\" = @canMove, \"CanBuyCell\" = @canBuyCell, \"CanLevelUpCell\" = @canLevelUpCell, \"ReverseMove\" = @reverseMove " +
+                $"SET \"Balance\" = @balance, \"Location\" = @location, \"CantAction\" = @cantAction, \"LastDice1\" = @lastDice1, \"LastDice2\" = @lastDice2, \"CountOfDubles\" = @countOfDubles, \"IsPrisoner\" = @isPrisoner, \"InGame\" = @inGame, \"NeedPay\" = @needPay, \"HisAction\" = @hisAction, \"CanMove\" = @canMove, \"CanBuyCell\" = @canBuyCell, \"CanLevelUpCell\" = @canLevelUpCell, \"ReverseMove\" = @reverseMove " +
                 "WHERE \"GameId\" = @gameId AND \"Id\" = @id";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
@@ -111,13 +111,14 @@ namespace Monopoly.Database
                 CantAction = npgsqlData.GetInt32(5),
                 ReverseMove = npgsqlData.GetInt32(6),
                 LastDiceResult = new Dice(npgsqlData.GetInt32(7), npgsqlData.GetInt32(8)),
-                IsPrisoner = npgsqlData.GetBoolean(9),
-                InGame = npgsqlData.GetBoolean(10),
-                NeedPay = npgsqlData.GetBoolean(11),
-                HisAction = npgsqlData.GetBoolean(12),
-                CanMove = npgsqlData.GetBoolean(13),
-                CanBuyCell = npgsqlData.GetBoolean(14),
-                CanLevelUpCell = npgsqlData.GetBoolean(15)
+                CountOfDubles = npgsqlData.GetInt32(9),
+                IsPrisoner = npgsqlData.GetBoolean(10),
+                InGame = npgsqlData.GetBoolean(11),
+                NeedPay = npgsqlData.GetBoolean(12),
+                HisAction = npgsqlData.GetBoolean(13),
+                CanMove = npgsqlData.GetBoolean(14),
+                CanBuyCell = npgsqlData.GetBoolean(15),
+                CanLevelUpCell = npgsqlData.GetBoolean(16)
             };
             return player;
         }
@@ -132,6 +133,7 @@ namespace Monopoly.Database
             cmd.Parameters.AddWithValue("reverseMove", player.ReverseMove);
             cmd.Parameters.AddWithValue("lastDice1", player.LastDiceResult.Dice1);
             cmd.Parameters.AddWithValue("lastDice2", player.LastDiceResult.Dice2);
+            cmd.Parameters.AddWithValue("countOfDubles", player.CountOfDubles);
             cmd.Parameters.AddWithValue("isPrisoner", player.IsPrisoner);
             cmd.Parameters.AddWithValue("inGame", player.InGame);
             cmd.Parameters.AddWithValue("needPay", player.NeedPay);

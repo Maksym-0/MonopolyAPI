@@ -45,6 +45,30 @@ namespace Monopoly.Service
             player.CanMove = false;
             player.LastDiceResult = dice;
 
+            if (player.LastDiceResult.Dubl)
+            {
+                player.CountOfDubles += 1;
+                if (player.CountOfDubles == 3)
+                {
+                    player.Location = 30;
+                    player.IsPrisoner = true;
+                    player.CantAction = 3;
+                    player.CountOfDubles = 0;
+                    player.StopAction();
+                    await dbPlayer.UpdatePlayerAsync(player);
+                    return new MoveDto()
+                    {
+                        Player = player,
+                        Cell = cells[player.Location],
+                        CellMessage = $"{player.Name} тричі поспіль викинув дубль і відправляється до в'язниці"
+                    };
+                }
+            }
+            else
+            {
+                player.CountOfDubles = 0;
+            }
+
             int oldLocation = player.Location;
             if (player.ReverseMove > 0)
             {
@@ -60,7 +84,12 @@ namespace Monopoly.Service
             
             Cell cell = cells[player.Location];
             string cellMessage = await CellEffectAsync(player, cell);
-            
+
+            if (player.LastDiceResult.Dubl)
+            {
+                player.StartAction();
+            }
+
             return new MoveDto()
             {
                 Player = player,

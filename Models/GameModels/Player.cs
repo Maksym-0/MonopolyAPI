@@ -7,53 +7,30 @@ namespace Monopoly.Models.GameModels
         public string Id { get; set; }
         public string Name { get; set; }
         public string GameId { get; set; }
-        public int Balance { get; set; }
-        public int Location { get; set; }
-        public int CantAction { get; set; }
-        public int ReverseMove { get; set; }
-        public Dice LastDiceResult { get; set; }
-        public bool IsPrisoner { get; set; }
-        public bool InGame { get; set; }
-        public bool NeedPay { get; set; }
-        public bool HisAction { get; set; }
-        public bool CanMove { get; set; }
-        public bool CanBuyCell { get; set; }
-        public bool CanLevelUpCell { get; set; }
+        public int Balance { get; set; } = 3000;
+        public int Location { get; set; } = 0;
+        public int CantAction { get; set; } = 0;
+        public int ReverseMove { get; set; } = 0;
+        public Dice LastDiceResult { get; set; } = new Dice(0, 0);
+        public int CountOfDubles { get; set; } = 0;
+        public bool IsPrisoner { get; set; } = false;
+        public bool InGame { get; set; } = true;
+        public bool NeedPay { get; set; } = false;
+        public bool HisAction { get; set; } = false;
+        public bool CanMove { get; set; } = false;
+        public bool CanBuyCell { get; set; } = false;
+        public bool CanLevelUpCell { get; set; } = false;
         public Player(PlayerInRoom basicPlayer)
         {
             Id = basicPlayer.Id;
             Name = basicPlayer.Name;
             GameId = basicPlayer.RoomId;
-            Balance = 3000;
-            Location = 0;
-            ReverseMove = 0;
-            LastDiceResult = new Dice(0, 0);
-            IsPrisoner = false;
-            NeedPay = false;
-            InGame = true;
-            HisAction = false;
-            CantAction = 0;
-            CanMove = false;
-            CanBuyCell = false;
-            CanLevelUpCell = false;
         }
         public Player(string gameId, string playerId, string name)
         {
             Id = playerId;
             Name = name;
             GameId = gameId;
-            Balance = 3000;
-            Location = 0;
-            ReverseMove = 0;
-            LastDiceResult = new Dice(0, 0);
-            IsPrisoner = false;
-            NeedPay = false;
-            InGame = true;
-            HisAction = false;
-            CantAction = 0;
-            CanMove = false;
-            CanBuyCell = false;
-            CanLevelUpCell = false;
         }
         public Player() { }
         public void StartAction()

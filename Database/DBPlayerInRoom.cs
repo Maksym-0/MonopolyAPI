@@ -4,7 +4,7 @@ using Npgsql;
 
 namespace Monopoly.Database
 {
-    public class DBPlayerInRoom : IPlayerInRoomRepository
+    public class DbPlayerInRoom : IPlayerInRoomRepository
     {
         public async Task InsertPlayerInRoomAsync(PlayerInRoom playerInRoom)
         {

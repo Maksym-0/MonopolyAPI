@@ -4,7 +4,7 @@ using Monopoly.Models.AcountModels;
 
 namespace Monopoly.Database
 {
-    public class DBAccount : IAccountRepository
+    public class DbAccount : IAccountRepository
     {
         public async Task InsertAccountAsync(Account acc)
         {
