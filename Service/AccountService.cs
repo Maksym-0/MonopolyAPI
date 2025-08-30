@@ -41,6 +41,19 @@ namespace Monopoly.Service
             }
             return null;
         }
+        public async Task<bool> TryDeleteAsync(string name, string password)
+        {
+            if (!await dbAccount.SearchUserWithNameAsync(name))
+                throw new Exception("Користувача із цим ім'ям не знайдено");
+            Account account = await dbAccount.ReadAccountWithNameAsync(name);
+
+            if (password == account.Password)
+            {
+                await dbAccount.DeleteAccountAsync(account);
+                return true;
+            }
+            return false;
+        }
 
         private async Task<string> GenerateIdAsync(int length)
         {

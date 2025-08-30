@@ -45,7 +45,7 @@ namespace Monopoly.Controllers
                     Data = null
                 });
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(new ApiResponse<object>()
                 {
@@ -60,7 +60,8 @@ namespace Monopoly.Controllers
         {
             string? token;
             try { token = await _accountService.TryLoginAsync(dto.Name, dto.Password); }
-            catch(Exception ex) {
+            catch (Exception ex)
+            {
                 return BadRequest(new ApiResponse<string>()
                 {
                     Success = false,
@@ -81,6 +82,41 @@ namespace Monopoly.Controllers
                 Message = "Введено некоректне ім'я або пароль",
                 Data = null
             });
+        }
+        [HttpDelete("delete")]
+        public async Task<IActionResult> Delete([FromBody] AccountRequest dto)
+        {
+            try
+            {
+                bool result = await _accountService.TryDeleteAsync(dto.Name, dto.Password);
+                if (result)
+                {
+                    return Ok(new ApiResponse<object>()
+                    { 
+                        Success = true,
+                        Message = "Обліковий запис успішно видалено",
+                        Data = null
+                    });
+                }
+                else
+                {
+                    return BadRequest(new ApiResponse<object>()
+                    {
+                        Success = false,
+                        Message = "Невірний пароль",
+                        Data = null
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiResponse<object>()
+                {
+                    Success = false,
+                    Message = ex.Message,
+                    Data = null
+                });
+            }
         }
     }
 }
