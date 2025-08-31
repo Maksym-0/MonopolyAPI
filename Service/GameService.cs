@@ -401,7 +401,7 @@ namespace Monopoly.Service
                 return "Гравець не може підняти рівень клітини";
             else if (cell.Unique)
                 return "Неможливо змінити рівень особливої клітини";
-            else if (cell.IsMonopoly.Value)
+            else if (!cell.IsMonopoly.Value)
                 return "Відсутня монополія, підняти рівень клітини неможливо";
             else if (cell.OwnerId != player.Id)
                 return "Заборонено змінювти рівень клітини, що Вам не належить";
