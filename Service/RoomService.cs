@@ -61,11 +61,11 @@ namespace Monopoly.Service
         }
         public async Task<RoomDto> JoinRoomAsync(string roomId, string? password, string accountId, string accountName)
         {
-            string? isValid = await ValidJoinRoomAsync(roomId, password, accountId);
+            Room room = await dbRoom.ReadRoomAsync(roomId);
+
+            string? isValid = await ValidJoinRoomAsync(room, password, accountId);
             if (isValid != null)
                 throw new Exception(isValid);
-            
-            Room room = await dbRoom.ReadRoomAsync(roomId);
             
             await dbPlayerInRoom.InsertPlayerInRoomAsync(new PlayerInRoom(roomId, accountId, accountName));
             room.CountOfPlayers += 1;
@@ -115,9 +115,8 @@ namespace Monopoly.Service
                 return "Максимальна кількість гравців обмежена від 2 до 4 осіб";
             return null;
         }
-        private async Task<string?> ValidJoinRoomAsync(string roomId, string? password, string playerId)
+        private async Task<string?> ValidJoinRoomAsync(Room room, string? password, string playerId)
         {
-            Room room = await dbRoom.ReadRoomAsync(roomId);
             if (room.MaxNumberOfPlayers <= room.CountOfPlayers)
                 return "Неможливо приєднатись. Кімнату переповнено";
             else if (room.InGame)
@@ -163,8 +162,12 @@ namespace Monopoly.Service
             
             players[0].StartAction();
 
-            await dbCells.InsertCellsAsync(cells);
-            await dbPlayer.InsertPlayersAsync(players);
+            List<Task> tasks = new List<Task>();
+
+            tasks.Add(dbCells.InsertCellsAsync(cells));
+            tasks.Add(dbPlayer.InsertPlayersAsync(players));
+
+            await Task.WhenAll(tasks);
         }
         private async Task DeleteRoomAndPlayers(string roomId)
         {
