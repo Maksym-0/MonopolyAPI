@@ -27,7 +27,8 @@ namespace Monopoly.Database
         {
             var sql = $"SELECT \"Id\", \"Name\", \"GameId\", \"Balance\", \"Location\", \"CantAction\", \"ReverseMove\", \"LastDice1\", \"LastDice2\", \"CountOfDubles\", \"IsPrisoner\", \"InGame\", \"NeedPay\", \"HisAction\", \"CanMove\", \"CanBuyCell\", \"CanLevelUpCell\" " +
                 $"FROM public.\"{Constants.DBplayerName}\" " +
-                $"WHERE \"GameId\" = @gameId";
+                $"WHERE \"GameId\" = @gameId " +
+                $"ORDER BY \"Id\"";
             NpgsqlConnection _connection = new NpgsqlConnection(Constants.Connect);
             NpgsqlCommand cmd = new NpgsqlCommand(sql, _connection);
 

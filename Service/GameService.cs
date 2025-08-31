@@ -52,7 +52,8 @@ namespace Monopoly.Service
                     player.IsPrisoner = false;
                     player.CantAction = 0;
                     player.CountOfDubles = 0;
-                    
+
+                    await dbPlayer.UpdatePlayerAsync(player);
                     return new MoveDto()
                     {
                         Player = player,
@@ -85,6 +86,7 @@ namespace Monopoly.Service
                 player.CountOfDubles = 0;
                 if (player.IsPrisoner)
                 {
+                    await dbPlayer.UpdatePlayerAsync(player);
                     return new MoveDto()
                     {
                         Player = player,
@@ -106,14 +108,15 @@ namespace Monopoly.Service
                 if (player.Location < oldLocation)
                     player.Balance += 100;
             }
-            
-            Cell cell = cells[player.Location];
-            string cellMessage = await CellEffectAsync(player, cell);
 
             if (player.LastDiceResult.Dubl)
             {
                 player.StartAction();
             }
+
+            Cell cell = cells[player.Location];
+            string cellMessage = await CellEffectAsync(player, cell);
+            await dbPlayer.UpdatePlayerAsync(player);
 
             return new MoveDto()
             {
@@ -502,7 +505,6 @@ namespace Monopoly.Service
                 message = $"{player.Name} потрапив на територію чужої компанії. До сплати {cell.Rent}$";
             }
 
-            await dbPlayer.UpdatePlayerAsync(player);
             return message;
         }
         private async Task<Player> ActionNextPlayer(string gameId, string oldPlayerId)
