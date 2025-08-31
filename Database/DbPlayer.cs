@@ -116,7 +116,7 @@ namespace Monopoly.Database
                 InGame = npgsqlData.GetBoolean(11),
                 NeedPay = npgsqlData.GetBoolean(12),
                 HisAction = npgsqlData.GetBoolean(13),
-                CanMove = npgsqlData.GetBoolean(14),
+                CanRollDice = npgsqlData.GetBoolean(14),
                 CanBuyCell = npgsqlData.GetBoolean(15),
                 CanLevelUpCell = npgsqlData.GetBoolean(16)
             };
@@ -138,7 +138,7 @@ namespace Monopoly.Database
             cmd.Parameters.AddWithValue("inGame", player.InGame);
             cmd.Parameters.AddWithValue("needPay", player.NeedPay);
             cmd.Parameters.AddWithValue("hisAction", player.HisAction);
-            cmd.Parameters.AddWithValue("canMove", player.CanMove);
+            cmd.Parameters.AddWithValue("canMove", player.CanRollDice);
             cmd.Parameters.AddWithValue("canBuyCell", player.CanBuyCell);
             cmd.Parameters.AddWithValue("canLevelUpCell", player.CanLevelUpCell);
         }

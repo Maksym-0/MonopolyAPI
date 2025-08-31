@@ -17,7 +17,7 @@ namespace Monopoly.Models.GameModels
         public bool InGame { get; set; } = true;
         public bool NeedPay { get; set; } = false;
         public bool HisAction { get; set; } = false;
-        public bool CanMove { get; set; } = false;
+        public bool CanRollDice { get; set; } = false;
         public bool CanBuyCell { get; set; } = false;
         public bool CanLevelUpCell { get; set; } = false;
         public Player(PlayerInRoom basicPlayer)
@@ -36,20 +36,26 @@ namespace Monopoly.Models.GameModels
         public void StartAction()
         {
             HisAction = true;
-            CanMove = true;
+            CanRollDice = true;
+            CanLevelUpCell = true;
+        }
+        public void StartPrisonerAction()
+        {
+            HisAction = true;
+            CanRollDice = true;
             CanLevelUpCell = true;
         }
         public void StopAction()
         {
             HisAction = false;
             NeedPay = false;
-            CanMove = false;
+            CanRollDice = false;
             CanBuyCell = false;
             CanLevelUpCell = false;
         }
         public bool CheckEndAction()
         {
-            if (CanMove == false && CanBuyCell == false && CanLevelUpCell == false && NeedPay == false) return true;
+            if (CanRollDice == false && CanBuyCell == false && CanLevelUpCell == false && NeedPay == false) return true;
             else return false;
         }
         public bool DeductMoney(int amount)

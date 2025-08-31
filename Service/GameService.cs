@@ -42,31 +42,56 @@ namespace Monopoly.Service
 
             Dice dice = new Dice();
 
-            player.CanMove = false;
+            player.CanRollDice = false;
             player.LastDiceResult = dice;
 
             if (player.LastDiceResult.Dubl)
             {
-                player.CountOfDubles += 1;
-                if (player.CountOfDubles == 3)
+                if (player.IsPrisoner)
                 {
-                    player.Location = 30;
-                    player.IsPrisoner = true;
-                    player.CantAction = 3;
+                    player.IsPrisoner = false;
+                    player.CantAction = 0;
                     player.CountOfDubles = 0;
-                    player.StopAction();
-                    await dbPlayer.UpdatePlayerAsync(player);
+                    
                     return new MoveDto()
                     {
                         Player = player,
                         Cell = cells[player.Location],
-                        CellMessage = $"{player.Name} тричі поспіль викинув дубль і відправляється до в'язниці"
+                        CellMessage = $"{player.Name} викинув дубль і виходить з в'язниці"
                     };
+                }
+                else
+                {
+                    player.CountOfDubles += 1;
+                    if (player.CountOfDubles == 3)
+                    {
+                        player.Location = 30;
+                        player.IsPrisoner = true;
+                        player.CantAction = 3;
+                        player.CountOfDubles = 0;
+                        player.StopAction();
+                        await dbPlayer.UpdatePlayerAsync(player);
+                        return new MoveDto()
+                        {
+                            Player = player,
+                            Cell = cells[player.Location],
+                            CellMessage = $"{player.Name} тричі поспіль викинув дубль і відправляється до в'язниці"
+                        };
+                    }
                 }
             }
             else
             {
                 player.CountOfDubles = 0;
+                if (player.IsPrisoner)
+                {
+                    return new MoveDto()
+                    {
+                        Player = player,
+                        Cell = cells[player.Location],
+                        CellMessage = $"{player.Name} не викинув дубль і залишається у в'язниці"
+                    };
+                }
             }
 
             int oldLocation = player.Location;
@@ -335,8 +360,8 @@ namespace Monopoly.Service
                 return "Гравець поза грою";
             else if (!player.HisAction)
                 return "Гравець не може ходити не в свій хід";
-            else if (!player.CanMove)
-                return "Гравець більше не може кидати кубики та рухатись";
+            else if (!player.CanRollDice)
+                return "Гравець більше не може кидати кубики";
             return null;
         }
         private string? ValidatePay(Player player, Cell cell)
@@ -403,7 +428,7 @@ namespace Monopoly.Service
                 return "Гравець вже поза грою";
             else if (!player.HisAction)
                 return "Гравець не може завершити нерозпочатий хід";
-            else if (player.CanMove)
+            else if (player.CanRollDice)
                 return "Гравець не може завершити хід, не кинувши кубики";
             else if (player.NeedPay)
                 return "Гравець не може завершити хід, не оплативши рахунки";
@@ -496,26 +521,24 @@ namespace Monopoly.Service
                     {
                         nextPlayer.IsPrisoner = false;
                         nextPlayer.StartAction();
-                        await dbPlayer.UpdatePlayerAsync(nextPlayer);
-                        return nextPlayer;
                     }
                     else
                     {
                         nextPlayer.CantAction--;
-                        await dbPlayer.UpdatePlayerAsync(nextPlayer);
+                        nextPlayer.StartPrisonerAction();
                     }
                 }
                 else if (nextPlayer.CantAction > 0)
                 {
                     nextPlayer.CantAction--;
-                    await dbPlayer.UpdatePlayerAsync(nextPlayer);
                 }
                 else
                 {
                     nextPlayer.StartAction();
-                    await dbPlayer.UpdatePlayerAsync(nextPlayer);
-                    return nextPlayer;
                 }
+                
+                await dbPlayer.UpdatePlayerAsync(nextPlayer);
+                return nextPlayer;
             }
         }
         private async Task<bool> CheckAndApplyMonopoly(Cell cell)
