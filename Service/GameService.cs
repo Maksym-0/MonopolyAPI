@@ -11,7 +11,7 @@ namespace Monopoly.Service
         private readonly IPlayerRepository dbPlayer;
         private readonly IRoomRepository dbRoom;
         private readonly IPlayerInRoomRepository dbPlayerInRoom;
-
+        
         public GameService(ICellRepository cellRepository, IPlayerRepository playerRepository, 
             IRoomRepository roomRepository, IPlayerInRoomRepository playerInRoomRepository) 
         {
@@ -533,6 +533,8 @@ namespace Monopoly.Service
                 else if (nextPlayer.CantAction > 0)
                 {
                     nextPlayer.CantAction--;
+                    await dbPlayer.UpdatePlayerAsync(nextPlayer);
+                    continue;
                 }
                 else
                 {
