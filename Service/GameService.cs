@@ -483,6 +483,7 @@ namespace Monopoly.Service
                         break;
                     case "Швидка допомога":
                         player.CantAction = 1;
+                        player.CountOfDubles = 0;
                         message = $"{player.Name} потрапив на клітину Швидка допомога і пропускає один хід";
                         break;
                     case "Зворотній хід":
@@ -501,8 +502,16 @@ namespace Monopoly.Service
             }
             else
             {
-                player.NeedPay = true;
-                message = $"{player.Name} потрапив на територію чужої компанії. До сплати {cell.Rent}$";
+                if (cell.OwnerId == player.Id)
+                {
+                    message = $"{player.Name} потрапив на свою клітину. Рента не стягується";
+                    return message;
+                }
+                else
+                {
+                    player.NeedPay = true;
+                    message = $"{player.Name} потрапив на територію чужої компанії. До сплати {cell.Rent}$";
+                }
             }
 
             return message;
