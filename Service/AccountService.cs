@@ -1,7 +1,8 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using Monopoly.Interfaces.IDatabases;
 using Monopoly.Interfaces.IServices;
-using Monopoly.Models.AcountModels;
+using Monopoly.Models.AccountModels;
+using Monopoly.Models.ApiResponse;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -18,17 +19,19 @@ namespace Monopoly.Service
             dbAccount = accountRepository;
         }
 
-        public async Task<bool> TryRegisterAsync(string name, string password)
+        public async Task<AccountDto> TryRegisterAsync(string name, string password)
         {
             if (await dbAccount.SearchUserWithNameAsync(name))
                 throw new Exception("Акаунт із цим ім'ям вже зареєстровано");
 
             Account account = new Account(await GenerateIdAsync(12), name, password);
-
+            AccountDto accountDto = new AccountDto(account);
+            
             await dbAccount.InsertAccountAsync(account);
-            return true;
+            
+            return accountDto;
         }
-        public async Task<string?> TryLoginAsync(string name, string password)
+        public async Task<LoginDto?> TryLoginAsync(string name, string password)
         {
             if (!await dbAccount.SearchUserWithNameAsync(name))
                 throw new Exception("Користувача із цим ім'ям не знайдено");
@@ -37,22 +40,37 @@ namespace Monopoly.Service
             if (password == account.Password)
             {
                 string token = GenerateToken(account.Id, account.Name);
-                return token;
+                return new LoginDto()
+                {
+                    Account = new AccountDto(account),
+                    Token = token,
+                    CreatedAt = DateTime.UtcNow,
+                    ExpiresAt = DateTime.UtcNow.AddHours(12)
+                };
             }
             return null;
         }
-        public async Task<bool> TryDeleteAsync(string name, string password)
+        public async Task<DeleteAccountDto> TryDeleteAsync(string name, string password)
         {
             if (!await dbAccount.SearchUserWithNameAsync(name))
                 throw new Exception("Користувача із цим ім'ям не знайдено");
             Account account = await dbAccount.ReadAccountWithNameAsync(name);
 
+            DeleteAccountDto dto = new DeleteAccountDto()
+            {
+                AccountId = account.Id,
+                Name = account.Name,
+
+                IsDeleted = true
+            };
+
             if (password == account.Password)
             {
                 await dbAccount.DeleteAccountAsync(account);
-                return true;
+                return dto;
             }
-            return false;
+            dto.IsDeleted = false;
+            return dto;
         }
 
         private async Task<string> GenerateIdAsync(int length)

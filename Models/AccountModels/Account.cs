@@ -1,4 +1,4 @@
-﻿namespace Monopoly.Models.AcountModels
+﻿namespace Monopoly.Models.AccountModels
 {
     public class Account
     {

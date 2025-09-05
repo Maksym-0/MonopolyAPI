@@ -1,6 +1,4 @@
-﻿using Monopoly.Database;
-using Monopoly.Models.APIResponse;
-using Monopoly.Models.RoomModels;
+﻿using Monopoly.Models.ApiResponse;
 
 namespace Monopoly.Interfaces.IServices
 {
@@ -9,6 +7,6 @@ namespace Monopoly.Interfaces.IServices
         Task<List<RoomDto>> GetAllRoomsAsync();
         Task<RoomDto> CreateRoomAsync(int maxNumberOfPlayers, string? password, string accountId, string accountName);
         Task<RoomDto> JoinRoomAsync(string roomId, string? password, string accountId, string accountName);
-        Task<string> QuitRoomAsync(string accountId);
+        Task<QuitRoomDto> QuitRoomAsync(string accountId);
     }
 }

@@ -37,12 +37,12 @@ namespace Monopoly.Controllers
         {
             try
             {
-                await _accountService.TryRegisterAsync(dto.Name, dto.Password);
+                AccountDto accountDto = await _accountService.TryRegisterAsync(dto.Name, dto.Password);
                 return Ok(new ApiResponse<object>()
                 {
                     Success = true,
                     Message = "Обліковий запис успішно створено",
-                    Data = null
+                    Data = accountDto
                 });
             }
             catch (Exception ex)
@@ -58,23 +58,26 @@ namespace Monopoly.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] AccountRequest dto)
         {
-            string? token;
-            try { token = await _accountService.TryLoginAsync(dto.Name, dto.Password); }
+            LoginDto? loginDto;
+            try 
+            {
+                loginDto = await _accountService.TryLoginAsync(dto.Name, dto.Password); 
+            }
             catch (Exception ex)
             {
                 return BadRequest(new ApiResponse<string>()
                 {
                     Success = false,
-                    Message = "Введено некоректне ім'я або пароль",
-                    Data = ex.Message
+                    Message = ex.Message,
+                    Data = null
                 });
             }
-            if (token != null)
-                return Ok(new ApiResponse<string>()
+            if (loginDto != null)
+                return Ok(new ApiResponse<LoginDto>()
                 {
                     Success = true,
                     Message = "Успішний вхід до облікового запису. Отримано JWT токен",
-                    Data = token
+                    Data = loginDto
                 });
             return BadRequest(new ApiResponse<string>()
             {
@@ -88,23 +91,23 @@ namespace Monopoly.Controllers
         {
             try
             {
-                bool result = await _accountService.TryDeleteAsync(dto.Name, dto.Password);
-                if (result)
+                DeleteAccountDto result = await _accountService.TryDeleteAsync(dto.Name, dto.Password);
+                if (result.IsDeleted)
                 {
-                    return Ok(new ApiResponse<object>()
+                    return Ok(new ApiResponse<DeleteAccountDto>()
                     { 
                         Success = true,
                         Message = "Обліковий запис успішно видалено",
-                        Data = null
+                        Data = result
                     });
                 }
                 else
                 {
-                    return BadRequest(new ApiResponse<object>()
+                    return BadRequest(new ApiResponse<DeleteAccountDto>()
                     {
                         Success = false,
                         Message = "Невірний пароль",
-                        Data = null
+                        Data = result
                     });
                 }
             }

@@ -1,6 +1,6 @@
 ﻿using Monopoly.Interfaces.IDatabases;
 using Monopoly.Interfaces.IServices;
-using Monopoly.Models.APIResponse;
+using Monopoly.Models.ApiResponse;
 using Monopoly.Models.GameModels;
 using Monopoly.Models.RoomModels;
 
@@ -76,7 +76,7 @@ namespace Monopoly.Service
                 await dbRoom.UpdateRoomAsync(room);
             return new RoomDto(room, await dbPlayerInRoom.ReadPlayerInRoomListAsync(roomId));
         }
-        public async Task<string> QuitRoomAsync(string accountId)
+        public async Task<QuitRoomDto> QuitRoomAsync(string accountId)
         {
             string? isValid = await ValidQuitRoomAsync(accountId);
             if (isValid != null)
@@ -85,25 +85,55 @@ namespace Monopoly.Service
             PlayerInRoom playerToRemove = await dbPlayerInRoom.ReadPlayerInRoomAsync(accountId);
             Room room = await dbRoom.ReadRoomAsync(playerToRemove.RoomId);
             
-            await dbPlayerInRoom.DeletePlayerInRoomAsync(accountId);
-            room.CountOfPlayers -= 1;
-
             if (room.InGame)
             {
                 var leaveGameDto = await gameService.LeaveGameAsync(playerToRemove.RoomId, accountId);
-                if(leaveGameDto.IsGameOver)
-                    return $"Гравець {leaveGameDto.PlayerName} покинув гру. Переможець {leaveGameDto.Winner.Name}";
-                return $"Гравець {leaveGameDto.PlayerName} покинув гру. В грі залишилось {leaveGameDto.RemainingPlayers}";
-            }
-            else if (room.CountOfPlayers > 0)
-            {
-                await dbRoom.UpdateRoomAsync(room);
-                return "Гравець покинув кімнату";
+                QuitRoomDto quitRoomDto = new QuitRoomDto()
+                {
+                    IsRoomDeleted = false,
+                    PlayerName = playerToRemove.Name,
+                    Winner = null,
+                    RemainingPlayers = leaveGameDto.RemainingPlayers,
+                    RoomDto = new RoomDto(room, await dbPlayerInRoom.ReadPlayerInRoomListAsync(room.RoomId))
+                };
+                if (leaveGameDto.IsGameOver)
+                {
+                    quitRoomDto.IsRoomDeleted = true;
+                    quitRoomDto.Winner = leaveGameDto.Winner.Name;
+                    quitRoomDto.RoomDto = null;
+                }
+                
+                return quitRoomDto;
             }
             else
             {
-                await DeleteRoomAndPlayers(playerToRemove.RoomId);
-                return "Гравець покинув кімнату. Порожню кімнату було видалено";
+                await dbPlayerInRoom.DeletePlayerInRoomAsync(accountId);
+                room.CountOfPlayers -= 1;
+
+                if (room.CountOfPlayers > 0)
+                {
+                    await dbRoom.UpdateRoomAsync(room);
+                    return new QuitRoomDto()
+                    {
+                        IsRoomDeleted = false,
+                        PlayerName = playerToRemove.Name,
+                        RemainingPlayers = room.CountOfPlayers,
+                        Winner = null,
+                        RoomDto = new RoomDto(room, await dbPlayerInRoom.ReadPlayerInRoomListAsync(room.RoomId))
+                    };
+                }
+                else
+                {
+                    await DeleteRoomAndPlayers(playerToRemove.RoomId);
+                    return new QuitRoomDto()
+                    {
+                        IsRoomDeleted = true,
+                        PlayerName = playerToRemove.Name,
+                        RemainingPlayers = room.CountOfPlayers,
+                        Winner = null,
+                        RoomDto = null
+                    };
+                }
             }
         }
 
@@ -171,10 +201,10 @@ namespace Monopoly.Service
         }
         private async Task DeleteRoomAndPlayers(string roomId)
         {
-            var deletePlayer = dbRoom.DeleteRoomAsync(roomId);
-            var deleteRoom = dbPlayerInRoom.DeleteAllPlayersInRoomAsync(roomId);
+            var deleteRoom = dbRoom.DeleteRoomAsync(roomId);
+            var deletePlayer = dbPlayerInRoom.DeleteAllPlayersInRoomAsync(roomId);
 
-            await Task.WhenAll(deletePlayer, deleteRoom);
+            await Task.WhenAll(deleteRoom, deletePlayer);
         }
 
         private List<Cell> CreateCells(string gameId)

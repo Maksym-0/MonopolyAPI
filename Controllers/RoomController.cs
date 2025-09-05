@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Monopoly.Interfaces.IServices;
 using Monopoly.Models.ApiResponse;
-using Monopoly.Models.APIResponse;
 using Monopoly.Models.Request;
 using System.Security.Claims;
 
@@ -85,12 +84,12 @@ namespace Monopoly.Controllers
         {
             try
             {
-                string msg = await _roomService.QuitRoomAsync(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-                ApiResponse<RoomDto> response = new ApiResponse<RoomDto>()
+                QuitRoomDto dto = await _roomService.QuitRoomAsync(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+                ApiResponse<QuitRoomDto> response = new ApiResponse<QuitRoomDto>()
                 {
                     Success = true,
-                    Message = msg,
-                    Data = null
+                    Message = "Гравець залишив кімнату",
+                    Data = dto
                 };
                 return Ok(response);
             }

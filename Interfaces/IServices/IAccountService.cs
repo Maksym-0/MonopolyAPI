@@ -1,12 +1,11 @@
-﻿using Monopoly.Database;
-using Monopoly.Models;
+﻿using Monopoly.Models.ApiResponse;
 
 namespace Monopoly.Interfaces.IServices
 {
     public interface IAccountService
     {
-        Task<bool> TryRegisterAsync(string name, string password);
-        Task<string?> TryLoginAsync(string name, string password);
-        Task<bool> TryDeleteAsync(string name, string password);
+        Task<AccountDto> TryRegisterAsync(string name, string password);
+        Task<LoginDto> TryLoginAsync(string name, string password);
+        Task<DeleteAccountDto> TryDeleteAsync(string name, string password);
     }
 }

@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Monopoly.Interfaces.IServices;
 using Monopoly.Models.ApiResponse;
-using Monopoly.Models.APIResponse;
 using System.Security.Claims;
 
 namespace Monopoly.Controllers

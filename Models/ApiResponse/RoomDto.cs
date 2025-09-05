@@ -1,6 +1,6 @@
 ﻿using Monopoly.Models.RoomModels;
 
-namespace Monopoly.Models.APIResponse
+namespace Monopoly.Models.ApiResponse
 {
     public class RoomDto
     {
