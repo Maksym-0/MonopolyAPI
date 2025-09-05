@@ -1,6 +1,6 @@
 ﻿using Npgsql;
 using Monopoly.Interfaces.IDatabases;
-using Monopoly.Models.AcountModels;
+using Monopoly.Models.AccountModels;
 
 namespace Monopoly.Database
 {
