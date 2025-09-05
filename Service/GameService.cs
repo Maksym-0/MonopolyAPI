@@ -157,6 +157,7 @@ namespace Monopoly.Service
                 payResponse.Amount = cell.Rent.Value;
                 payResponse.ReceiverId = receiver.Id;
                 payResponse.ReceiverName = receiver.Name;
+                payResponse.NewReceiverBalance = receiver.Balance;
             }
             else if (player.IsPrisoner)
             {
