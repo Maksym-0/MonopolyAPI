@@ -13,10 +13,12 @@ namespace Monopoly.Service
     {
         Random random = new Random();
         IAccountRepository dbAccount;
+        IPlayerInRoomRepository dbPlayerInRoom;
 
-        public AccountService(IAccountRepository accountRepository) 
+        public AccountService(IAccountRepository accountRepository, IPlayerInRoomRepository playerInRoomRepository) 
         {
             dbAccount = accountRepository;
+            dbPlayerInRoom = playerInRoomRepository;
         }
 
         public async Task<AccountDto> TryRegisterAsync(string name, string password)
@@ -55,6 +57,11 @@ namespace Monopoly.Service
             if (!await dbAccount.SearchUserWithNameAsync(name))
                 throw new Exception("Користувача із цим ім'ям не знайдено");
             Account account = await dbAccount.ReadAccountWithNameAsync(name);
+
+            bool isInRoom = await dbPlayerInRoom.SearchPlayerInRoomWithIdAsync(account.Id);
+            
+            if (isInRoom)
+                throw new Exception("Видалення акаунта неможливе, поки ви перебуваєте в кімнаті");
 
             DeleteAccountDto dto = new DeleteAccountDto()
             {
