@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Monopoly.Interfaces.IServices;
-using Monopoly.Models.ApiResponse;
-using Monopoly.Models.Request;
+using Monopoly.Core.Interfaces.IServices;
+using Monopoly.Core.Models.Request;
 using System.Security.Claims;
+using Monopoly.API;
+using Monopoly.Core.DTO.Rooms;
 
 namespace Monopoly.Controllers
 {
@@ -24,14 +25,9 @@ namespace Monopoly.Controllers
         {
             try
             {
-                List<RoomDto> rooms = await _roomService.GetAllRoomsAsync();
-                ApiResponse<List<RoomDto>> response = new ApiResponse<List<RoomDto>>()
-                {
-                    Success = true,
-                    Message = "Отримано список кімнат",
-                    Data = rooms
-                };
-                return Ok(response); 
+                var result = await _roomService.GetAllRoomsAsync();
+                ApiResponse<List<RoomDto>> response = new(result.Success, result.Message, result.Data);
+                return StatusCode((int)result.StatusCode, response); 
             }
             catch(Exception ex)
             {
@@ -43,14 +39,9 @@ namespace Monopoly.Controllers
         {
             try
             {
-                RoomDto room = await _roomService.CreateRoomAsync(dto.MaxNumberOfPlayers, dto.Password, User.FindFirst(ClaimTypes.NameIdentifier).Value, User.Identity.Name);
-                ApiResponse<RoomDto> response = new ApiResponse<RoomDto>()
-                {
-                    Success = true,
-                    Message = "Кімнату успішно створено",
-                    Data = room
-                };
-                return Ok(response);
+                var result = await _roomService.CreateRoomAsync(dto.MaxNumberOfPlayers, dto.Password, Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value));
+                ApiResponse<RoomDto> response = new ApiResponse<RoomDto>(result.Success, result.Message, result.Data);
+                return StatusCode((int)result.StatusCode, response);
             }
             catch (Exception ex)
             {
@@ -62,17 +53,9 @@ namespace Monopoly.Controllers
         {
             try
             {
-                RoomDto room = await _roomService.JoinRoomAsync(dto.RoomId, dto.Password, User.FindFirst(ClaimTypes.NameIdentifier).Value, User.Identity.Name);
-                string msg = "Ви зайшли до кімнати";
-                if (room.InGame)
-                    msg = "Ви зайшли до кімнати. Гру розпочато";
-                ApiResponse<RoomDto> response = new ApiResponse<RoomDto>()
-                {
-                    Success = true,
-                    Message = msg,
-                    Data = room
-                };
-                return Ok(response);
+                var result = await _roomService.JoinRoomAsync(dto.RoomId, dto.Password, Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value));
+                ApiResponse<JoinRoomDto> response = new(result.Success, result.Message, result.Data);
+                return StatusCode((int)result.StatusCode, response);
             }
             catch(Exception ex)
             {
@@ -84,14 +67,9 @@ namespace Monopoly.Controllers
         {
             try
             {
-                QuitRoomDto dto = await _roomService.QuitRoomAsync(User.FindFirst(ClaimTypes.NameIdentifier).Value);
-                ApiResponse<QuitRoomDto> response = new ApiResponse<QuitRoomDto>()
-                {
-                    Success = true,
-                    Message = "Гравець залишив кімнату",
-                    Data = dto
-                };
-                return Ok(response);
+                var result = await _roomService.QuitRoomAsync(Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value));
+                ApiResponse<QuitRoomDto> response = new(result.Success, result.Message, result.Data);
+                return StatusCode((int)result.StatusCode, response);
             }
             catch(Exception ex)
             {

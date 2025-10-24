@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Monopoly.Models.ApiResponse;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using Monopoly.Interfaces.IServices;
-using Monopoly.Models.Request;
+using Monopoly.Core.Interfaces.IServices;
+using Monopoly.Core.Models.Request;
+using Monopoly.API;
+using Monopoly.Core.DTO.Accounts;
 
 namespace Monopoly.Controllers
 {
@@ -18,108 +19,71 @@ namespace Monopoly.Controllers
         }
         [Authorize]
         [HttpGet("me")]
-        public IActionResult GetMyData()
+        public async Task<IActionResult> GetMyData()
         {
-            AccountDto account = new AccountDto()
+            try
             {
-                Id = User.FindFirst(ClaimTypes.NameIdentifier).Value,
-                Name = User.Identity.Name
-            };
-            return Ok(new ApiResponse<object>()
+                var result = await _accountService.MeAsync(Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value));
+                ApiResponse<AccountDto> response = new ApiResponse<AccountDto>(result.Success, result.Message, result.Data);
+                return StatusCode((int)result.StatusCode, response);
+            }
+            catch(Exception ex)
             {
-                Success = true,
-                Message = "Дані користувача",
-                Data = account
-            });
+                return CatchBadRequest(ex);
+            }
         }
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] AccountRequest dto)
         {
             try
             {
-                AccountDto accountDto = await _accountService.TryRegisterAsync(dto.Name, dto.Password);
-                return Ok(new ApiResponse<object>()
-                {
-                    Success = true,
-                    Message = "Обліковий запис успішно створено",
-                    Data = accountDto
-                });
+                var result = await _accountService.RegisterAsync(dto.Name, dto.Password);
+                ApiResponse<AccountDto> response = new ApiResponse<AccountDto>(result.Success, result.Message, result.Data);
+                return StatusCode((int)result.StatusCode, response);
             }
             catch (Exception ex)
             {
-                return BadRequest(new ApiResponse<object>()
-                {
-                    Success = false,
-                    Message = ex.Message,
-                    Data = null
-                });
+                return CatchBadRequest(ex);
             }
         }
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] AccountRequest dto)
         {
-            LoginDto? loginDto;
             try 
             {
-                loginDto = await _accountService.TryLoginAsync(dto.Name, dto.Password); 
+                var result = await _accountService.LoginAsync(dto.Name, dto.Password);
+                ApiResponse<LoginDto> response = new ApiResponse<LoginDto>(result.Success, result.Message, result.Data);
+                return StatusCode((int)result.StatusCode, response);
             }
             catch (Exception ex)
             {
-                return BadRequest(new ApiResponse<string>()
-                {
-                    Success = false,
-                    Message = ex.Message,
-                    Data = null
-                });
+                return CatchBadRequest(ex);
             }
-            if (loginDto != null)
-                return Ok(new ApiResponse<LoginDto>()
-                {
-                    Success = true,
-                    Message = "Успішний вхід до облікового запису. Отримано JWT токен",
-                    Data = loginDto
-                });
-            return BadRequest(new ApiResponse<string>()
-            {
-                Success = false,
-                Message = "Введено некоректне ім'я або пароль",
-                Data = null
-            });
         }
         [HttpDelete("delete")]
         public async Task<IActionResult> Delete([FromBody] AccountRequest dto)
         {
             try
             {
-                DeleteAccountDto result = await _accountService.TryDeleteAsync(dto.Name, dto.Password);
-                if (result.IsDeleted)
-                {
-                    return Ok(new ApiResponse<DeleteAccountDto>()
-                    { 
-                        Success = true,
-                        Message = "Обліковий запис успішно видалено",
-                        Data = result
-                    });
-                }
-                else
-                {
-                    return BadRequest(new ApiResponse<DeleteAccountDto>()
-                    {
-                        Success = false,
-                        Message = "Невірний пароль",
-                        Data = result
-                    });
-                }
+                var result = await _accountService.DeleteAsync(dto.Name, dto.Password);
+                ApiResponse<DeleteAccountDto> response = new ApiResponse<DeleteAccountDto>(result.Success, result.Message, result.Data);
+                return StatusCode((int)result.StatusCode, response);
             }
             catch (Exception ex)
             {
-                return BadRequest(new ApiResponse<object>()
-                {
-                    Success = false,
-                    Message = ex.Message,
-                    Data = null
-                });
+                return CatchBadRequest(ex);
             }
+        }
+
+        private IActionResult CatchBadRequest(Exception ex)
+        {
+            ApiResponse<object> response = new ApiResponse<object>()
+            {
+                Success = false,
+                Message = ex.Message,
+                Data = null
+            };
+            return BadRequest(response);
         }
     }
 }

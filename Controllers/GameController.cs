@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Monopoly.Interfaces.IServices;
-using Monopoly.Models.ApiResponse;
-using System.Security.Claims;
+using Monopoly.Core.Interfaces.IServices;
+using Monopoly.API;
+using Monopoly.Core.DTO.Games;
 
 namespace Monopoly.Controllers
 {
@@ -23,14 +24,9 @@ namespace Monopoly.Controllers
         {
             try
             {
-                GameDto game = await _gameService.StatusOfGameAsync(gameId);
-                ApiResponse<GameDto> response = new ApiResponse<GameDto>()
-                {
-                    Success = true,
-                    Message = "Отримано поточний стан гри",
-                    Data = game
-                };
-                return Ok(response);
+                var result = await _gameService.StatsOfGameAsync(Guid.Parse(gameId));
+                ApiResponse<GameStateDto> response = new ApiResponse<GameStateDto>(result.Success, result.Message, result.Data);
+                return StatusCode((int)result.StatusCode, response);
             }
             catch(Exception ex)
             {
@@ -38,39 +34,43 @@ namespace Monopoly.Controllers
             }
         }
         [HttpPut("move")]
-        public async Task<IActionResult> Move(string gameId)
+        public async Task<IActionResult> MovePlayer(string gameId)
         {
             try
             {
-                var moveResult = await _gameService.MoveAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value);
-                ApiResponse<MoveDto> response = new ApiResponse<MoveDto>()
-                {
-                    Success = true,
-                    Message = "Бросок кубиків та відповідний рух завершено",
-                    Data = moveResult
-                };
-                return Ok(response);
+                var result = await _gameService.MoveAsync(Guid.Parse(gameId), Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value));
+                ApiResponse<MoveDto> response = new ApiResponse<MoveDto>(result.Success, result.Message, result.Data);
+                return StatusCode((int)result.StatusCode, response);
             }
             catch(Exception ex)
             {
                 return CatchBadRequest(ex);
             }
         }
-        [HttpPut("pay")]
-        public async Task<IActionResult> Pay(string gameId)
+        [HttpPut("pay/rent")]
+        public async Task<IActionResult> PayRent(string gameId)
         {
             try
             {
-                var payResult = await _gameService.TryPayAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value);
-                ApiResponse<PayDto> response = new ApiResponse<PayDto>()
-                {
-                    Success = true,
-                    Message = "Сплату рахунків завершено",
-                    Data = payResult
-                };
-                return Ok(response); 
+                var result = await _gameService.PayRentAsync(Guid.Parse(gameId), Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value));
+                ApiResponse<PayDto> response = new ApiResponse<PayDto>(result.Success, result.Message, result.Data);
+                return StatusCode((int)result.StatusCode, response); 
             }
             catch (Exception ex)
+            {
+                return CatchBadRequest(ex);
+            }
+        }
+        [HttpPut("pay/prison")]
+        public async Task<IActionResult> PayToLeavePrison(string gameId)
+        {
+            try
+            {
+                var result = await _gameService.PayToLeavePrisonAsync(Guid.Parse(gameId), Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value));
+                ApiResponse<PayDto> response = new ApiResponse<PayDto>(result.Success, result.Message, result.Data);
+                return StatusCode((int)result.StatusCode, response);
+            }
+            catch(Exception ex)
             {
                 return CatchBadRequest(ex);
             }
@@ -80,14 +80,9 @@ namespace Monopoly.Controllers
         {
             try
             {
-                var buyResult = await _gameService.TryBuyAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value);
-                ApiResponse<BuyDto> response = new ApiResponse<BuyDto>()
-                {
-                    Success = true,
-                    Message = "Придбання клітини завершено",
-                    Data = buyResult
-                };
-                return Ok(response);
+                var result = await _gameService.BuyCellAsync(Guid.Parse(gameId), Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value));
+                ApiResponse<BuyDto> response = new ApiResponse<BuyDto>(result.Success, result.Message, result.Data);
+                return StatusCode((int)result.StatusCode, response);
             }
             catch(Exception ex)
             {
@@ -99,14 +94,9 @@ namespace Monopoly.Controllers
         {
             try
             {
-                var levelUpResult = await _gameService.LevelUpAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value, cellNumber);
-                ApiResponse<LevelChangeDto> response = new ApiResponse<LevelChangeDto>()
-                {
-                    Success = true,
-                    Message = "Збільшення рівня клітини завершено",
-                    Data = levelUpResult
-                };
-                return Ok(response);
+                var result = await _gameService.LevelUpAsync(Guid.Parse(gameId), Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value), cellNumber);
+                ApiResponse<LevelChangeDto> response = new ApiResponse<LevelChangeDto>(result.Success, result.Message, result.Data);
+                return StatusCode((int)result.StatusCode, response);
             }
             catch(Exception ex)
             {
@@ -118,14 +108,9 @@ namespace Monopoly.Controllers
         {
             try
             {
-                var levelDownResult = await _gameService.LevelDownAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value, cellNumber);
-                ApiResponse<LevelChangeDto> response = new ApiResponse<LevelChangeDto>()
-                {
-                    Success = true,
-                    Message = "Зменшення рівня клітини завершено",
-                    Data = levelDownResult
-                };
-                return Ok(response);
+                var result = await _gameService.LevelDownAsync(Guid.Parse(gameId), Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value), cellNumber);
+                ApiResponse<LevelChangeDto> response = new ApiResponse<LevelChangeDto>(result.Success, result.Message, result.Data);
+                return StatusCode((int)result.StatusCode, response);
             }
             catch(Exception ex)
             {
@@ -137,14 +122,9 @@ namespace Monopoly.Controllers
         {
             try
             {
-                var status = await _gameService.EndActionAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value);
-                ApiResponse<NextActionDto> response = new ApiResponse<NextActionDto>()
-                {
-                    Success = true,
-                    Message = "Дію завершено",
-                    Data = status
-                };
-                return Ok(response); 
+                var result = await _gameService.EndActionAsync(Guid.Parse(gameId), Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value));
+                ApiResponse<NextActionDto> response = new ApiResponse<NextActionDto>(result.Success, result.Message, result.Data);
+                return StatusCode((int)result.StatusCode, response); 
             }
             catch(Exception ex)
             {
@@ -156,14 +136,9 @@ namespace Monopoly.Controllers
         {
             try
             {
-                var status = await _gameService.LeaveGameAsync(gameId, User.FindFirst(ClaimTypes.NameIdentifier).Value);
-                ApiResponse<LeaveGameDto> response = new ApiResponse<LeaveGameDto>()
-                {
-                    Success = true,
-                    Message = "Гру покинуто",
-                    Data = status
-                };
-                return Ok(response);
+                var result = await _gameService.LeaveGameAsync(Guid.Parse(gameId), Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value));
+                ApiResponse<LeaveGameDto> response = new ApiResponse<LeaveGameDto>(result.Success, result.Message, result.Data);
+                return StatusCode((int)result.StatusCode, response);
             }
             catch(Exception ex)
             {

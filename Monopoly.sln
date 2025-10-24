@@ -3,11 +3,25 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35931.197
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monopoly", "Monopoly.csproj", "{C83B4B52-4721-4B9D-993E-ADD3FD7B95F5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monopoly.API", "Monopoly.API.csproj", "{C83B4B52-4721-4B9D-993E-ADD3FD7B95F5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{534436C9-4610-4E0C-A9A4-4C23641E907C} = {534436C9-4610-4E0C-A9A4-4C23641E907C}
+		{8992E2EF-CE16-41B7-B7C5-9E6599172BC8} = {8992E2EF-CE16-41B7-B7C5-9E6599172BC8}
+		{F12FF45F-5DD7-472A-8CF1-300C1ADFBE54} = {F12FF45F-5DD7-472A-8CF1-300C1ADFBE54}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решения", "Элементы решения", "{754FC069-D67B-A9D7-50A1-8D1CA196D8F1}"
 	ProjectSection(SolutionItems) = preProject
 		railway.toml = railway.toml
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monopoly.DataAccess.Postgres", "..\Monopoly.DataAccess.Postgres\Monopoly.DataAccess.Postgres.csproj", "{8992E2EF-CE16-41B7-B7C5-9E6599172BC8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monopoly.Core", "..\Monopoly.Core\Monopoly.Core.csproj", "{534436C9-4610-4E0C-A9A4-4C23641E907C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monopoly.Application", "..\Monopoly.Application\Monopoly.Application.csproj", "{F12FF45F-5DD7-472A-8CF1-300C1ADFBE54}"
+	ProjectSection(ProjectDependencies) = postProject
+		{534436C9-4610-4E0C-A9A4-4C23641E907C} = {534436C9-4610-4E0C-A9A4-4C23641E907C}
 	EndProjectSection
 EndProject
 Global
@@ -20,6 +34,18 @@ Global
 		{C83B4B52-4721-4B9D-993E-ADD3FD7B95F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C83B4B52-4721-4B9D-993E-ADD3FD7B95F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C83B4B52-4721-4B9D-993E-ADD3FD7B95F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8992E2EF-CE16-41B7-B7C5-9E6599172BC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8992E2EF-CE16-41B7-B7C5-9E6599172BC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8992E2EF-CE16-41B7-B7C5-9E6599172BC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8992E2EF-CE16-41B7-B7C5-9E6599172BC8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{534436C9-4610-4E0C-A9A4-4C23641E907C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{534436C9-4610-4E0C-A9A4-4C23641E907C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{534436C9-4610-4E0C-A9A4-4C23641E907C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{534436C9-4610-4E0C-A9A4-4C23641E907C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F12FF45F-5DD7-472A-8CF1-300C1ADFBE54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F12FF45F-5DD7-472A-8CF1-300C1ADFBE54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F12FF45F-5DD7-472A-8CF1-300C1ADFBE54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F12FF45F-5DD7-472A-8CF1-300C1ADFBE54}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
